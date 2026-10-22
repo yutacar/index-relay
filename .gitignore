@@ -1,0 +1,37 @@
+# Local build/runtime data
+/work/
+/outputs/
+/build/
+/DerivedData/
+.DS_Store
+**/xcuserdata/
+**/*.xcuserstate
+*.xcarchive
+*.ipa
+*.dSYM/
+*.xcresult/
+bridge/.gradle/
+bridge/.kotlin/
+bridge/build/
+# Generated native bridge: rebuild from bridge/ (see docs/BUILD.md).
+/ios/Frameworks/IndexReceiverBridge.xcframework/
+# Credentials, signing material, local configuration and captured recordings
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.key
+*.pem
+*.local.xcconfig
+*.wav
+*.pcm
+*.m4a
+*.mp3
+*.log
+
+# Python script/test caches
+__pycache__/
+*.py[cod]

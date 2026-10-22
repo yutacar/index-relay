@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "slices": {
+    "ios-arm64": {
+      "urls": [
+        "https://youtrack.jetbrains.com/issue/KT-42254"
+      ],
+      "markers": [
+        "CFNetwork",
+        "CFSocket",
+        "NSStream",
+        "NSURLSession",
+        "SecTrustEvaluate",
+        "WebSocket",
+        "getaddrinfo",
+        "io.ktor.client"
+      ]
+    },
+    "ios-arm64-simulator": {
+      "urls": [
+        "https://youtrack.jetbrains.com/issue/KT-42254"
+      ],
+      "markers": [
+        "CFNetwork",
+        "CFSocket",
+        "NSStream",
+        "NSURLSession",
+        "SecTrustEvaluate",
+        "WebSocket",
+        "getaddrinfo",
+        "io.ktor.client"
+      ]
+    }
+  }
+}

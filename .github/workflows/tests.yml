@@ -1,0 +1,29 @@
+name: Swift core tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core-tests:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      # Pinned to a commit so a moved tag cannot change what runs (v7.0.1).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify committed Gradle wrapper without downloading it
+        run: python3 scripts/verify-gradle-wrapper.py
+      - name: Test wrapper verification failure handling
+        run: python3 -m unittest discover -s tests/GradleWrapper -v
+      - name: Run deterministic tests (no Bluetooth or API tokens)
+        run: python3 scripts/run-tests.py
+      - name: Test bridge network inspection with synthetic binaries
+        run: python3 -m unittest discover -s tests/BridgeNetwork -v
+      - name: Test bridge build failure handling
+        run: python3 -m unittest discover -s tests/BridgeBuild -v
+      - name: Test exported publication audit
+        run: python3 -m unittest discover -s tests/Publication -v
+      - name: Audit repository contents
+        run: python3 scripts/check-publication.py

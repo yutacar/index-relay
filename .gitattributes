@@ -1,0 +1,11 @@
+* text=auto
+*.swift text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.png binary
+bridge/gradlew text eol=lf
+bridge/gradlew.bat text eol=crlf
+*.jar binary

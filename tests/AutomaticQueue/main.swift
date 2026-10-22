@@ -1,0 +1,113 @@
+import Foundation
+var checks = 0
+@MainActor
+func check(_ value: Bool, _ label: String) { precondition(value, label); checks += 1 }
+func rejects(_ operation: () throws -> Void) -> Bool { do { try operation(); return false } catch { return true } }
+let root = FileManager.default.temporaryDirectory.appendingPathComponent("IndexRelayAutoTests-" + UUID().uuidString)
+try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+defer { try? FileManager.default.removeItem(at: root) }
+func recording(_ letter: String, index: Int, frames: Int = 16000, created: Double = 0) -> ReceivedRecording {
+    ReceivedRecording(id: String(repeating: letter, count: 64), receivedAt: Date(timeIntervalSince1970: created),
+        sampleRate: 16000, sampleCount: frames, collectionIndex: index, contiguous: true, transfer: nil)
+}
+var frontier = SavedCollectionFrontier()
+frontier.observe(first: 100, reset: false)
+try frontier.saved(start: 102, end: 103)
+check(frontier.committed == nil && frontier.next == 100, "Out-of-order completed span cannot skip unsaved audio")
+try frontier.saved(start: 100, end: 101)
+check(frontier.committed == 103 && frontier.next == 104, "Advance only when hole closes")
+try frontier.saved(start: 100, end: 103)
+check(frontier.committed == 103 && frontier.next == 104, "Duplicate span cannot regress frontier")
+frontier.observe(first: 90, reset: false)
+check(frontier.next == 104, "Replayed range announcement does not rewind")
+frontier.observe(first: 200, reset: true)
+check(frontier.next == 200 && frontier.committed == nil, "Explicit native buffer reset rebases safely")
+var rollover = SavedCollectionFrontier()
+rollover.observe(first: 65534, reset: false)
+try rollover.saved(start: 0, end: 1)
+check(rollover.next == 65534, "Rollover does not skip earlier pending parts")
+try rollover.saved(start: 65534, end: 65535)
+check(rollover.committed == 1 && rollover.next == 2, "Contiguous frontier crosses UInt16 boundary")
+try rollover.saved(start: 65534, end: 65535)
+check(rollover.next == 2, "Old replay across rollover ignored")
+check(rejects { try rollover.saved(start: -1, end: 5) }, "Invalid indices rejected")
+check(rejects { try rollover.saved(start: 0, end: 9000) }, "Unbounded spans rejected")
+// Every ordering of three parts yields the same final frontier without skipping holes.
+for order in [[10,11,12],[10,12,11],[11,10,12],[11,12,10],[12,10,11],[12,11,10]] {
+    var f = SavedCollectionFrontier(); f.observe(first: 10, reset: false)
+    for index in order { try f.saved(start: index, end: index) }
+    check(f.committed == 12, "Completion ordering is irrelevant")
+}
+let file = root.appendingPathComponent("state.json")
+let queue = try AutomaticQueue(file: file)
+check(!queue.state.enabled && queue.pendingCount == 0, "New queue is opt-in")
+let ring = UUID().uuidString
+try queue.configure(ringID: ring, name: "Index01")
+try queue.observe(first: 100, reset: false)
+let later = recording("b", index: 103, created: 2)
+try queue.received(later, start: 102)
+check(queue.pendingCount == 1 && queue.state.frontier.committed == nil, "Job and non-skipping frontier persisted together")
+let earlier = recording("a", index: 101, created: 1)
+try queue.received(earlier, start: 100)
+let restored = try AutomaticQueue(file: file)
+check(restored.state.enabled && restored.state.ringID == ring, "Configuration survives process restart")
+check(restored.state.frontier.committed == 103 && restored.pendingCount == 2, "Cursor and jobs survive process restart")
+check(restored.next()?.id == earlier.id, "Jobs run oldest first")
+try restored.start(id: earlier.id)
+let crashed = try AutomaticQueue(file: file)
+try crashed.reconcile(recordings: [earlier,later], completed: [])
+check(crashed.state.jobs[earlier.id]?.phase == .queued, "Interrupted recognition becomes queued")
+try crashed.start(id: earlier.id)
+try crashed.finish(id: earlier.id, outcome: .saved, detail: nil)
+try crashed.received(earlier, start: 100)
+check(crashed.state.jobs[earlier.id]?.phase == .done, "Replay does not recognize completed recording again")
+try crashed.reconcile(recordings: [earlier,later], completed: [earlier.id,later.id])
+check(crashed.pendingCount == 0, "Recognized text committed before queue completion reconciles after crash")
+try crashed.reconcile(recordings: [earlier,later], completed: [])
+check(crashed.pendingCount == 2, "Missing transcript causes safe regeneration")
+try crashed.start(id: earlier.id)
+try crashed.finish(id: earlier.id, outcome: .cancelled, detail: nil)
+check(crashed.state.jobs[earlier.id]?.failures == 0 && crashed.state.jobs[earlier.id]?.phase == .queued, "Expiration does not count as recognition failure")
+let now = Date(timeIntervalSince1970: 1000)
+try crashed.start(id: earlier.id)
+try crashed.finish(id: earlier.id, outcome: .retryableFailure, detail: "retry", now: now)
+check(crashed.state.jobs[earlier.id]?.retryAfter == now.addingTimeInterval(30), "Failure backoff applied")
+try crashed.start(id: earlier.id)
+try crashed.finish(id: earlier.id, outcome: .retryableFailure, detail: nil, now: now)
+try crashed.start(id: earlier.id)
+try crashed.finish(id: earlier.id, outcome: .retryableFailure, detail: nil, now: now)
+check(crashed.state.jobs[earlier.id]?.phase == .needsAttention && crashed.attentionCount == 1, "Three failures require attention")
+try crashed.start(id: later.id)
+try crashed.finish(id: later.id, outcome: .modelDeferred, detail: "model_deferred", now: now)
+check(crashed.state.jobs[later.id]?.phase == .queued && crashed.state.jobs[later.id]?.failures == 0, "Missing model remains queued without penalty")
+try crashed.foregroundReady()
+check(crashed.state.jobs[later.id]?.retryAfter == nil, "Foreground resumes deferred model preparation")
+try crashed.retryWaiting()
+check(crashed.attentionCount == 0 && crashed.pendingCount == 2, "Explicit retry resets failed work")
+let tiny = recording("c", index: 104, frames: 16)
+try crashed.received(tiny, start: 104)
+check(crashed.state.jobs[tiny.id] == nil && crashed.state.frontier.committed == 104, "Tiny non-speech tail stored without an ASR job")
+let orphan = recording("d", index: 108)
+try crashed.reconcile(recordings: [earlier,later,orphan], completed: [])
+check(crashed.state.jobs[orphan.id] != nil, "Audio committed before queue crash is discovered on restart")
+let originalEnabled = crashed.state.enabled
+try FileManager.default.removeItem(at: file)
+try FileManager.default.createDirectory(at: file, withIntermediateDirectories: false)
+check(rejects { try crashed.setEnabled(false) }, "Disk failure reported")
+check(crashed.state.enabled == originalEnabled, "Failed transaction does not publish new configuration")
+let oldCursor = crashed.state.frontier.committed
+check(rejects { try crashed.received(recording("e", index: 105), start: 105) }, "Cursor write failure reported")
+check(crashed.state.frontier.committed == oldCursor, "Failed transaction never advances cursor")
+let corrupt = root.appendingPathComponent("corrupt.json")
+try Data("invalid json".utf8).write(to: corrupt)
+check(rejects { _ = try AutomaticQueue(file: corrupt) }, "Corrupt state fails closed instead of silently replacing history")
+var completions: [Bool] = []
+let expireFirst = BackgroundCompletionGate()
+expireFirst.finish(false) { completions.append($0) }
+expireFirst.finish(true) { completions.append($0) }
+check(completions == [false], "Expiry followed by cleanup reports completion only once")
+let successFirst = BackgroundCompletionGate()
+successFirst.finish(true) { completions.append($0) }
+successFirst.finish(false) { completions.append($0) }
+check(completions == [false,true], "Late expiry cannot change an already completed task")
+print("AutomaticQueue: \(checks) checks passed")

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.coredevices.haversine</groupId>
+  <artifactId>haversine</artifactId>
+  <version>2541a33</version>
+  <name>Haversine KMP</name>
+  <description>haversine-kmp</description>
+  <url>https://github.com/coredevices/haversine-kmp</url>
+  <inceptionYear>2025</inceptionYear>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>CoreDevices</id>
+      <name>Core Devices</name>
+      <url>http://repebble.com</url>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/coredevices/haversine-kmp</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>2.2.20</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-serialization-json</artifactId>
+      <version>1.9.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>co.touchlab</groupId>
+      <artifactId>kermit</artifactId>
+      <version>2.0.6</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-core</artifactId>
+      <version>1.10.2</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-io-core</artifactId>
+      <version>0.7.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.ktor</groupId>
+      <artifactId>ktor-client-core</artifactId>
+      <version>3.2.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.ktor</groupId>
+      <artifactId>ktor-client-darwin</artifactId>
+      <version>3.2.1</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>
