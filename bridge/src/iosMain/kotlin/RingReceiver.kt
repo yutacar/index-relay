@@ -15,6 +15,7 @@ class RingReceiver(
     private val onRaw: (NSData, Int) -> Unit,
     private val onAudio: (NSData, NSData?, Int, Int, String, Boolean) -> Unit
 ) {
+    private val recordingVoltage = RecordingVoltage()
     private var continuousMode = false
     private val durableCursor = MutableStateFlow<Int?>(null)
 
@@ -41,6 +42,7 @@ class RingReceiver(
     @Throws(Exception::class)
     fun start() {
         if (scope != null) return
+        recordingVoltage.clear()
         withCaptureLock { captured.clear(); capturedBytes = 0 }
         cursorNotified = false
         ringDetected = false
@@ -154,7 +156,13 @@ class RingReceiver(
                                 onEvent("ファームウェア情報を取得")
                             }
                             when (transfer) {
+                                is TransferStatus.TransferTypeDetermined -> {
+                                    if (transfer.isAudio) recordingVoltage.record(
+                                        transfer.collectionIndex, transfer.batteryVoltageMilliV?.toInt())
+                                }
                                 is TransferStatus.TransferComplete -> {
+                                    val batteryVoltageMilliV = recordingVoltage.take(
+                                        transfer.collectionStartCount.toInt(), transfer.collectionIndex)
                                     val samples = transfer.samples
                                     onEvent("音声変換開始: Collection ${transfer.collectionIndex} / ${samples.size}サンプル")
                                     if (samples.size > 16 * 1024 * 1024) {
@@ -198,7 +206,7 @@ class RingReceiver(
                                     if (bytes.isNotEmpty()) bytes.usePinned {
                                         onAudio(NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()), replayData,
                                             transfer.sampleRate.toInt(), transfer.collectionIndex,
-                                            "{\"nativePCMHash\":\"${fnv64(bytes)}\",\"replayStatus\":\"$replayStatus\",\"start\":${transfer.collectionStartCount}," +
+                                            "{\"batteryVoltageMilliV\":${batteryVoltageMilliV ?: "null"},\"nativePCMHash\":\"${fnv64(bytes)}\",\"replayStatus\":\"$replayStatus\",\"start\":${transfer.collectionStartCount}," +
                                                 "\"releasedMs\":${transfer.buttonReleaseTimestamp?.toEpochMilliseconds() ?: "null"}," +
                                                 "\"completedMs\":${transfer.transferCompleteTimestamp.toEpochMilliseconds()}," +
                                                 "\"buttonSequencePresent\":${transfer.buttonSequence != null}}",
@@ -243,6 +251,7 @@ class RingReceiver(
 
     @Throws(Exception::class)
     fun stop() {
+        recordingVoltage.clear()
         scope?.cancel()
         manager?.wrap?.environment()?.setTransferDelegate(originalDelegate)
         captureProxy = null

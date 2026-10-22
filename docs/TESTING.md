@@ -95,3 +95,17 @@ python3 -m unittest discover -s tests/GradleWrapper -v
 ```
 
 10件のテストでJAR欠落・改変・symlink、起動スクリプト改変、実行権限、配布URL・SHA・版の固定、重複／未知の設定を確認します。Windows用ランチャーは改行差を正規化して検査します。Wrapper経由での実際のstrictビルドと、隔離コピーへの依存候補採取も確認しています。実機のTelegramと通信観測の完了とは別です。
+
+
+## 録音データの電池電圧（0.9.8）
+
+`python3 scripts/run-tests.py`に旧メタデータの読み込み、電圧の保存・再読み込み、V／mV表示、無効値、同一録音の補完時にID・日時・既存値を維持する検査を含みます。
+
+Kotlin/Nativeの録音電圧キャッシュは、受信ブリッジと同じコンパイラーで次を実行します。`konanc`のパスとキャッシュは利用環境に合わせてください。
+
+```sh
+konanc bridge/src/iosMain/kotlin/RecordingVoltage.kt tests/RecordingVoltage/main.kt -o work/recording-voltage-tests
+work/recording-voltage-tests.kexe
+```
+
+別録音からの値の混入、Collection番号の65535→0、イベント順序の違い、未知値、上限とセッション終了時の消去を確認します。実機では更新後の録音のⓘを開き、電圧が得られる場合のV／mV表示と、更新前など値がない録音の「不明」を確認してください。機器が電圧を含めない場合は不明を保ち、別録音の値から推測しません。実測値の表示は実機追試待ちです。

@@ -163,6 +163,9 @@ private struct RecordingAudioInfoView: View {
                 Section("録音情報") {
                     LabeledContent("日時", value: recording.recordedAt.formatted(date: .abbreviated, time: .standard))
                     LabeledContent("長さ", value: String(format: "%.1f秒", recording.duration))
+                    LabeledContent("電池電圧", value: recording.batteryVoltageText)
+                    Text("録音データに含まれる値です。現在の電圧や電池残量％を示すものではありません。")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("音声") {
                     Button("標準補正で再生", systemImage: "play.fill") { store.play(recording, mode: .adaptive) }

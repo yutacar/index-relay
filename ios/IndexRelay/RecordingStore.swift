@@ -60,10 +60,13 @@ final class RecordingStore: ObservableObject {
            let metadata = try? Data(contentsOf: metadataURL),
            let existing = try? JSONDecoder().decode(ReceivedRecording.self, from: metadata),
            existing.id == id, existing.sampleRate == sampleRate, existing.sampleCount == pcm.count / 2 {
-            if existing.transfer == nil, let transfer {
+            let updatedTransfer = transfer.map { incoming in
+                existing.transfer?.addingBatteryVoltage(from: incoming) ?? incoming
+            } ?? existing.transfer
+            if existing.transfer != updatedTransfer {
                 let enriched = ReceivedRecording(id: existing.id, receivedAt: existing.receivedAt,
                     sampleRate: existing.sampleRate, sampleCount: existing.sampleCount,
-                    collectionIndex: existing.collectionIndex, contiguous: existing.contiguous, transfer: transfer)
+                    collectionIndex: existing.collectionIndex, contiguous: existing.contiguous, transfer: updatedTransfer)
                 try persist(JSONEncoder().encode(enriched), to: metadataURL)
                 reload()
             }
