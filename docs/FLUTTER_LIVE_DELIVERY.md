@@ -128,7 +128,7 @@ python3 scripts/record-android-live-check.py observe \
 
 準備時点の検証結果：[FLUTTER_LIVE_DELIVERY_EVIDENCE.json](FLUTTER_LIVE_DELIVERY_EVIDENCE.json)。実API投稿の結果と、到着・通知の確認範囲は同JSONの最新結果を参照。
 
-追記（2026-10-22）：準備時のAndroid CIは、起動直後に携帯通信サービスがまだ使えず失敗した。準備待ちと4回帰テストを追加し、後続CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）で画面・JNI・模擬送信まで成功した。これは準備時点のCI記録。実サービスでの最新確認範囲は上記JSONを参照。
+追記（2026-10-22）：準備時のAndroid CIは、起動直後に携帯通信サービスがまだ使えず失敗した。準備待ちと4回帰テストを追加し、後続CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay/actions)を参照）で画面・JNI・模擬送信まで成功した。これは準備時点のCI記録。実サービスでの最新確認範囲は上記JSONを参照。
 
 ## 通常欄で文字キーボードが出ない場合
 

@@ -1,6 +1,6 @@
 # 公開前の確認結果
 
-確認日：2026-10-23。公開候補は[index-relay-public](https://github.com/yutacar/index-relay-public)です。可視性変更前のPrivateリポジトリとして準備しました。最新の自動実行結果は[GitHub Actions](https://github.com/yutacar/index-relay-public/actions)を参照してください。以下はローカルで実行した確認の記録です。
+確認日：2026-10-23。公開候補は[index-relay](https://github.com/yutacar/index-relay)です。可視性変更前のPrivateリポジトリとして準備しました。最新の自動実行結果は[GitHub Actions](https://github.com/yutacar/index-relay/actions)を参照してください。以下はローカルで実行した確認の記録です。
 
 ## 取得元と確認環境
 
@@ -40,7 +40,7 @@ Flutterのskip 2件はpreview実行では対象外のproduction専用テスト�
 
 iOSの受信・文字起こし・ロック解除後の復帰、自動受信オフ→オン後の再開、基本投稿は開発時の利用者報告による確認。今回のソース公開準備で実機へのインストールや実投稿は行っていない。
 
-Androidの実機BLE、長時間の背景動作、実録音の精度・電池消費は未確認。過去のエミュレーター・実サービス基本送信の結果はFlutter版の[対応状況](https://github.com/yutacar/index-relay-public/blob/codex/flutter/docs/FLUTTER_STATUS.md)を参照。ネイティブ版の電池電圧表示も今回のビルド確認だけでは実機での表示を検証していない。
+Androidの実機BLE、長時間の背景動作、実録音の精度・電池消費は未確認。過去のエミュレーター・実サービス基本送信の結果はFlutter版の[対応状況](https://github.com/yutacar/index-relay/blob/codex/flutter/docs/FLUTTER_STATUS.md)を参照。ネイティブ版の電池電圧表示も今回のビルド確認だけでは実機での表示を検証していない。
 
 ## 公開操作
 

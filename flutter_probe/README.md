@@ -9,8 +9,8 @@ AndroidはBLE受信アダプター、通知付き受信サービス、WorkManage
 ## ソースを取得する
 
 ```sh
-git clone --branch codex/flutter https://github.com/yutacar/index-relay-public.git
-cd index-relay-public
+git clone --branch codex/flutter https://github.com/yutacar/index-relay.git
+cd index-relay
 ```
 
 以降、`cd flutter_probe`まではリポジトリ直下で実行します。

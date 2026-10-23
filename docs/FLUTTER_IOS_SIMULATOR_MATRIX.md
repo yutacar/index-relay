@@ -70,4 +70,4 @@ flutter build ios --simulator --debug --no-codesign --target lib/main.dart
 
 試験用シーン対応は`8928239`、機種指定の追加は`5ef09a5`。OSごとの実行コードと確認項目は[検証記録](FLUTTER_IOS_SIMULATOR_MATRIX_EVIDENCE.json)に保存した。音声・文字起こし本文・資格情報・Simulatorの固有ID・ローカルパスは記録に含めない。
 
-試験後に`lib/main.dart`で通常版Simulatorアプリをビルドし、版0.12.1／34を照合した。Simulator成果物は実機用preflightで署名・プロビジョニングの検証に失敗し拒否された。最新の試験コードのSwift CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）は成功、Flutter／Android CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）は実行中。
+試験後に`lib/main.dart`で通常版Simulatorアプリをビルドし、版0.12.1／34を照合した。Simulator成果物は実機用preflightで署名・プロビジョニングの検証に失敗し拒否された。最新の試験コードのSwift CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay/actions)を参照）は成功、Flutter／Android CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay/actions)を参照）は実行中。

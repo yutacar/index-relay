@@ -3,8 +3,8 @@
 ## ソースを取得する
 
 ```sh
-git clone https://github.com/yutacar/index-relay-public.git
-cd index-relay-public
+git clone https://github.com/yutacar/index-relay.git
+cd index-relay
 git switch codex/flutter
 ```
 

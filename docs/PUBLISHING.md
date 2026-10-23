@@ -2,7 +2,7 @@
 
 ## リポジトリとブランチ
 
-公開候補は[Index Relay](https://github.com/yutacar/index-relay-public)です。移行時点ではPrivateで、コード・文書・CIを確認してから所有者が公開設定を変更します。以前の開発用リポジトリはPrivateで保管し、公開候補へのリンクとして使用しません。
+公開候補は[Index Relay](https://github.com/yutacar/index-relay)です。移行時点ではPrivateで、コード・文書・CIを確認してから所有者が公開設定を変更します。以前の開発用リポジトリは`index-relay-private-archive`へ改名してPrivateで保管し、公開候補へのリンクとして使用しません。公開候補は当初の`index-relay-public`から`index-relay`へ改名済みです。
 
 | ブランチ | 内容 | バージョン |
 | --- | --- | --- |
@@ -12,8 +12,8 @@
 両ブランチを取得できます。ビルド中に同じ作業ディレクトリのブランチを切り替えず、必要なら別のcloneを使います。
 
 ```sh
-git clone https://github.com/yutacar/index-relay-public.git
-cd index-relay-public
+git clone https://github.com/yutacar/index-relay.git
+cd index-relay
 # Flutter版を選ぶ場合だけ実行
 git switch codex/flutter
 ```
