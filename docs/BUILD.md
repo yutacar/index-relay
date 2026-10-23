@@ -3,11 +3,11 @@
 ## ソースを取得する
 
 ```sh
-git clone https://github.com/yutacar/index-relay-public.git
-cd index-relay-public
+git clone https://github.com/yutacar/index-relay.git
+cd index-relay
 ```
 
-この手順は`main`のネイティブiOS版用です。Flutter版は[`codex/flutter`のビルド手順](https://github.com/yutacar/index-relay-public/blob/codex/flutter/docs/BUILD.md)を使ってください。
+この手順は`main`のネイティブiOS版用です。Flutter版は[`codex/flutter`のビルド手順](https://github.com/yutacar/index-relay/blob/codex/flutter/docs/BUILD.md)を使ってください。
 
 
 ## 対象
