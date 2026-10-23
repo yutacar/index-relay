@@ -12,7 +12,7 @@ TREES = ["docs", ".github", "ThirdPartyNotices", "scripts", "tests"]
 SKIP = {".DS_Store", "__pycache__", "xcuserdata", ".gradle", ".kotlin", "build", ".git"}
 
 def ignore(directory, names):
-    return [name for name in names if name in SKIP or name.endswith((".pyc", ".xcuserstate"))]
+    return [name for name in names if name in SKIP or name.endswith((".pyc", ".xcuserstate", ".xcappdata"))]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

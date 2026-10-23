@@ -1,0 +1,7 @@
+#include "Generated.xcconfig"
+
+// Keep the preview separate until an in-place update is explicitly configured.
+INDEX_RELAY_DISPLAY_NAME = Index Relay Preview
+INDEX_RELAY_DEVELOPMENT_TEAM =
+INDEX_RELAY_BUNDLE_IDENTIFIER = dev.example.indexRelayProbe
+#include? "Migration.local.xcconfig"

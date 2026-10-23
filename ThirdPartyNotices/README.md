@@ -34,3 +34,11 @@ Apache License全文はApache-2.0.txt、Haversineの公開POMはHaversine-2541a3
 公開ソースリポジトリには生成済みXCFrameworkを含めません。再ビルドはMaven配布物に依存します。バイナリを配布する場合は、このフォルダーのライセンス・NOTICEと配布物に追加の表記がないかを確認して同梱してください。
 
 アプリアイコンは本プロジェクト用にAIで新規生成した図案です。公式ロゴの配布物は含めていません。
+
+## Flutter／Android版
+
+`Android-runtime-dependencies.json`はGradleで解決した実行時依存のレビュー済み一覧です。`scripts/check-app-notices.py`はビルド時の一覧と照合し、依存が増減した場合は再確認を要求します。
+
+Flutter 3.47.7のBSD、SLF4J 2.0.17のMIT、whisper.cppのMIT、WhisperモデルのMITをこのフォルダーに保持します。`scripts/prepare-app-notices.py`でアプリ内の通知を生成し、Flutter／Dart依存についてはFlutterが生成する通知も同梱します。Android版はWhisper base multilingualモデルを同梱し、iOS版のFlutter資産からは除外します。
+
+モデルとソースの固定版・取得元・ハッシュは`flutter_probe/toolchain-lock.json`、配布用ビルドと検査の手順は[Flutter step 7](../docs/FLUTTER_STEP7.md)を参照してください。

@@ -1,0 +1,152 @@
+{
+  "schema": 2,
+  "date": "2026-10-22",
+  "sourceCommit": "a92eac95d6becf252e9d0a00c4164b3f319e60e5",
+  "applicationVersion": "0.12.1",
+  "buildNumber": 34,
+  "dedicatedEmulator": {
+    "serial": "emulator-5556",
+    "api": 36,
+    "abi": "arm64-v8a",
+    "mockTransportActive": false,
+    "mockConfigurationPresent": false,
+    "receiverEnabled": false,
+    "destinations": 2,
+    "unfinishedJobs": 0
+  },
+  "realServicePostsPerformed": true,
+  "syntheticAudioUsed": true,
+  "localWhisperRecognitionVerified": true,
+  "cases": [
+    {
+      "case": "confirmation",
+      "startedAt": "2026-10-22T04:54:32.310521+00:00",
+      "observedAt": "2026-10-22T04:55:49.101805+00:00",
+      "apiChecksPassed": true,
+      "confirmationObserved": true,
+      "pausedObserved": false,
+      "reenabledWithoutBackfill": false,
+      "manualArrival": "verified",
+      "manualMention": "unverified",
+      "jobs": [
+        {
+          "provider": "telegram",
+          "phase": "sent",
+          "attempts": 1,
+          "receiptPresent": true,
+          "prefixJoinedCorrectly": true
+        },
+        {
+          "provider": "discord",
+          "phase": "sent",
+          "attempts": 1,
+          "receiptPresent": true,
+          "prefixJoinedCorrectly": true
+        }
+      ],
+      "allSelectedChecksPassed": true
+    },
+    {
+      "case": "automatic",
+      "startedAt": "2026-10-22T04:56:25.948150+00:00",
+      "observedAt": "2026-10-22T04:56:51.434851+00:00",
+      "apiChecksPassed": true,
+      "confirmationObserved": false,
+      "pausedObserved": false,
+      "reenabledWithoutBackfill": false,
+      "manualArrival": "verified",
+      "manualMention": "unverified",
+      "jobs": [
+        {
+          "provider": "telegram",
+          "phase": "sent",
+          "attempts": 1,
+          "receiptPresent": true,
+          "prefixJoinedCorrectly": true
+        },
+        {
+          "provider": "discord",
+          "phase": "sent",
+          "attempts": 1,
+          "receiptPresent": true,
+          "prefixJoinedCorrectly": true
+        }
+      ],
+      "allSelectedChecksPassed": true
+    },
+    {
+      "case": "paused",
+      "startedAt": "2026-10-22T04:56:53.375291+00:00",
+      "observedAt": "2026-10-22T04:57:16.423443+00:00",
+      "apiChecksPassed": true,
+      "confirmationObserved": false,
+      "pausedObserved": true,
+      "reenabledWithoutBackfill": true,
+      "manualArrival": "unverified",
+      "manualMention": "unverified",
+      "jobs": [],
+      "allSelectedChecksPassed": true
+    }
+  ],
+  "postsPerProvider": 2,
+  "arrivalVerified": true,
+  "mentionNotificationVerified": false,
+  "prefixConfigured": false,
+  "nonemptyPrefixVerified": false,
+  "originalSettingsRestored": {
+    "requiresConfirmation": true,
+    "bothDestinationsEnabled": true
+  },
+  "physicalAndroidBLEVerified": false,
+  "credentialsExported": false,
+  "contentExported": false,
+  "pending": null,
+  "preparationEvidence": {
+    "date": "2026-10-22",
+    "sourceCommit": "99efe3b36fd5d695f82d1a9ea81f2b84d496d5b8",
+    "previewDebugBuild": true,
+    "liveVerificationUnitTests": 12,
+    "releasePolicyTests": 8,
+    "dedicatedEmulator": {
+      "serial": "emulator-5556",
+      "api": 36,
+      "abi": "arm64-v8a",
+      "nativeDiagnosticsReachable": true,
+      "mockTransportActive": false,
+      "mockConfigurationPresent": false,
+      "receiverEnabled": false,
+      "destinations": 0,
+      "unfinishedJobs": 0
+    },
+    "realServicePostsPerformed": false,
+    "arrivalVerified": false,
+    "mentionNotificationVerified": false,
+    "physicalAndroidBLEVerified": false,
+    "credentialsExported": false,
+    "pending": "Test destinations must be entered by the user in the app.",
+    "ci": {
+      "flutterAndroid": "https://github.com/yutacar/index-relay/actions/runs/39678845970",
+      "swiftAndPublication": "https://github.com/yutacar/index-relay/actions/runs/39678845953",
+      "statusAtPreparation": "in_progress",
+      "initialAndroidConclusion": "failure",
+      "initialFailureScope": "Emulator phone service not ready after boot_completed",
+      "followUpAndroidUrl": "https://github.com/yutacar/index-relay/actions/runs/39698822928",
+      "followUpSwiftUrl": "https://github.com/yutacar/index-relay/actions/runs/39698822932",
+      "followUpConclusion": "success",
+      "followUpSourceCommit": "ea9d3ca0eb082d7ea8606cf8ef379f02765f068b",
+      "serviceReadinessRegressionTests": 4
+    }
+  },
+  "manualArrivalEvidence": "User confirmed two test posts in each of Discord and Telegram.",
+  "manualAttestedAt": "2026-10-22T05:05:10.048763+00:00",
+  "basicDeliveryVerificationComplete": true,
+  "additionalLiveTestsDeclinedByUser": [
+    "nonemptyPrefix",
+    "discordMentionNotification"
+  ],
+  "notVerified": [
+    "nonemptyPrefix",
+    "discordMentionNotification",
+    "physicalAndroidBLE"
+  ]
+}

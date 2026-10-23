@@ -15,6 +15,8 @@ class RingReceiver(
     private val onRaw: (NSData, Int) -> Unit,
     private val onAudio: (NSData, NSData?, Int, Int, String, Boolean) -> Unit
 ) {
+    private val receptionEnabled = MutableStateFlow(true)
+    private var scanInstalled = false
     private var continuousMode = false
     private val durableCursor = MutableStateFlow<Int?>(null)
 
@@ -41,6 +43,9 @@ class RingReceiver(
     @Throws(Exception::class)
     fun start() {
         if (scope != null) return
+        receptionEnabled.value = true
+        scanInstalled = false
+        onEvent("受信ブリッジ: pause-resume-v1")
         withCaptureLock { captured.clear(); capturedBytes = 0 }
         cursorNotified = false
         ringDetected = false
@@ -83,7 +88,7 @@ class RingReceiver(
             try {
                 onEvent("Haversineマネージャーを生成します。")
                 val receiver = KMPHaversineSatelliteManager(
-            pairedSatelliteIdProvider = { ringId }, debugDelegate = debug, hacksDelegate = hacks,
+            pairedSatelliteIdProvider = { if (receptionEnabled.value) ringId else null }, debugDelegate = debug, hacksDelegate = hacks,
             collectionIndexStorage = storage, hwVersion = Pair(11, 0), scope = runScope,
             updateJsonProvider = { null }
         )
@@ -93,7 +98,7 @@ class RingReceiver(
                     ?: throw IllegalStateException("Missing transfer delegate")
                 originalDelegate = delegate
                 val proxy = CaptureTransferDelegate(delegate, inspectRange = { range ->
-                    if (continuousMode) range.useContents {
+                    if (continuousMode && receptionEnabled.value) range.useContents {
                         val first = rangeStart.toInt()
                         val last = rangeEnd.toInt()
                         val saved = durableCursor.value
@@ -143,8 +148,13 @@ class RingReceiver(
                 onEvent("受信ライブラリを起動（更新情報なし・初回消去を拒否）")
                 onEvent("Bluetoothの準備を待機します。")
                 receiver.awaitBluetoothReady()
+                receptionEnabled.first { it }
+                scanInstalled = true
                 onEvent("Bluetooth準備完了。スキャンを開始します。")
                 receiver.startScanning().collect { event ->
+                    // Keep the SDK listener alive across user toggles, but never deliver
+                    // audio or progress while paused. The durable cursor cannot advance.
+                    if (!receptionEnabled.value) return@collect
                     when (event) {
                         is SatelliteStatus.Transferring -> {
                             val transfer = event.transferStatus
@@ -236,6 +246,34 @@ class RingReceiver(
         }
     }
 
+    // User OFF pauses discovery and denies new transfers without constructing a second
+    // native central manager on ON. Full stop remains for disposal/ring changes/errors.
+    @Throws(Exception::class)
+    fun pause() {
+        if (scope == null || !receptionEnabled.value) return
+        receptionEnabled.value = false
+        manager?.wrap?.stopScanning()
+        onEvent("自動受信を一時停止しました（マネージャー保持）")
+    }
+
+    @Throws(Exception::class)
+    fun resume() {
+        if (scope == null) { start(); return }
+        if (receptionEnabled.value) return
+        receptionEnabled.value = true
+        onEvent("同じ受信マネージャーで再開します")
+        if (scanInstalled) {
+            manager?.wrap?.scanForSatellitesWithCompletionHandler { error ->
+                if (receptionEnabled.value) {
+                    if (error == null) onEvent("Bluetooth準備完了。スキャンを開始します。")
+                    else onEvent("Bluetooth接続失敗: スキャン再開エラー")
+                }
+            }
+        } else {
+            onEvent("Bluetoothの準備を待機します。")
+        }
+    }
+
     private inline fun <T> withCaptureLock(action: () -> T): T {
         captureLock.lock()
         try { return action() } finally { captureLock.unlock() }
@@ -243,13 +281,33 @@ class RingReceiver(
 
     @Throws(Exception::class)
     fun stop() {
-        scope?.cancel()
-        manager?.wrap?.environment()?.setTransferDelegate(originalDelegate)
-        captureProxy = null
-        originalDelegate = null
-        withCaptureLock { captured.clear(); capturedBytes = 0 }
+        val oldScope = scope
+        val oldManager = manager
+        if (oldScope == null && oldManager == null) return
+        // Reentrant/late callbacks must not treat this session as running.
+        receptionEnabled.value = false
+        scanInstalled = false
         scope = null
         manager = null
+        val environment = oldManager?.wrap?.environment()
+        val complete = runReceiverShutdown(
+            // A cancelled coroutine's cleanup is not a reliable way to stop native BLE.
+            { oldManager?.wrap?.stopScanning(); Unit },
+            { oldScope?.cancel(); Unit },
+            // This environment belongs to this receiver. Restoring the original transfer
+            // delegate retains callbacks into the old KMP manager across a restart.
+            { environment?.setTransferDelegate(null); Unit },
+            { environment?.setPermissionsDelegate(null); Unit },
+            { environment?.setDebugDelegate(null); Unit },
+            { environment?.setUpdateDelegate(null); Unit },
+            { environment?.setHacksDelegate(null); Unit },
+            {
+                captureProxy = null
+                originalDelegate = null
+                withCaptureLock { captured.clear(); capturedBytes = 0 }
+            }
+        )
+        if (!complete) onEvent("受信停止時の後片付けに失敗しました")
         onEvent("受信停止")
     }
 }

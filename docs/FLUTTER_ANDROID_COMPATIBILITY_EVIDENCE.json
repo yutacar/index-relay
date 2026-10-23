@@ -1,0 +1,109 @@
+{
+  "scope": "ARM64 emulator; synthetic repeated speech; no real BLE/external posts",
+  "apkSha256": "83cbf87e093881f7ee934492b07f7bd7dc78a5960b8048d0faf8eb80d00e7ddd",
+  "emulatorCores": 2,
+  "emulatorMemoryMiB": 2048,
+  "cases": [
+    {
+      "api": 31,
+      "bluetoothInitiallyDenied": true,
+      "asr": [
+        {
+          "audioSeconds": 15,
+          "wallSeconds": 4.7,
+          "nativeAsrMs": 2732,
+          "sampledPeakPssKiB": 292666,
+          "sampledPeakRssKiB": 384416,
+          "phase": "done",
+          "nonemptyResult": true
+        }
+      ],
+      "serviceWithoutNotificationPermission": false,
+      "permissionRevocationAndManualRestart": true,
+      "invalidModelGuidanceAndRepair": true,
+      "deleteDuringAsrNoResurrection": true
+    },
+    {
+      "api": 33,
+      "bluetoothInitiallyDenied": true,
+      "asr": [
+        {
+          "audioSeconds": 15,
+          "wallSeconds": 5.05,
+          "nativeAsrMs": 4011,
+          "sampledPeakPssKiB": 296200,
+          "sampledPeakRssKiB": 330488,
+          "phase": "done",
+          "nonemptyResult": true
+        }
+      ],
+      "serviceWithoutNotificationPermission": true,
+      "permissionRevocationAndManualRestart": true,
+      "invalidModelGuidanceAndRepair": true,
+      "deleteDuringAsrNoResurrection": true
+    },
+    {
+      "api": 36,
+      "bluetoothInitiallyDenied": true,
+      "asr": [
+        {
+          "audioSeconds": 60,
+          "wallSeconds": 44.49,
+          "nativeAsrMs": 39635,
+          "sampledPeakPssKiB": 354767,
+          "sampledPeakRssKiB": 383244,
+          "phase": "done",
+          "nonemptyResult": true
+        },
+        {
+          "audioSeconds": 180,
+          "wallSeconds": 34.57,
+          "nativeAsrMs": 31071,
+          "sampledPeakPssKiB": 422339,
+          "sampledPeakRssKiB": 474716,
+          "phase": "done",
+          "nonemptyResult": true
+        },
+        {
+          "audioSeconds": 300,
+          "wallSeconds": 59.72,
+          "nativeAsrMs": 56440,
+          "sampledPeakPssKiB": 452405,
+          "sampledPeakRssKiB": 504180,
+          "phase": "done",
+          "nonemptyResult": true
+        }
+      ],
+      "serviceWithoutNotificationPermission": true,
+      "permissionRevocationAndManualRestart": true,
+      "rebootRequiresManualRestart": true,
+      "invalidModelGuidanceAndRepair": true,
+      "deleteDuringAsrNoResurrection": true
+    }
+  ],
+  "passed": true,
+  "date": "2026-10-22",
+  "applicationVersion": "0.11.0",
+  "buildNumber": 32,
+  "physicalBLEVerified": false,
+  "externalPostsPerformed": false,
+  "timingScope": "Single synthetic repeated Japanese fixture run; no accuracy or physical-device speed claim",
+  "memoryScope": "Sampled PSS/RSS maxima, not absolute peak allocations",
+  "fourThreadBaseline": {
+    "api": 31,
+    "audioSeconds": 15,
+    "nativeAsrMs": 176161,
+    "inferenceThreads": 4
+  },
+  "localChecks": {
+    "flutterAnalyze": true,
+    "flutterPreviewTests": 20,
+    "flutterProductionTests": 2,
+    "kotlinUnitTests": 10,
+    "pythonLiveVerificationTests": 18,
+    "pythonReleasePackagingTests": 8,
+    "productionApkAudit": true,
+    "androidUiModelPreparationIntegration": true,
+    "publicationCheck": true
+  }
+}

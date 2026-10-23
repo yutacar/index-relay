@@ -25,5 +25,13 @@ jobs:
         run: python3 -m unittest discover -s tests/BridgeBuild -v
       - name: Test exported publication audit
         run: python3 -m unittest discover -s tests/Publication -v
+      - name: Test release packaging policy
+        run: python3 -m unittest discover -s tests/ReleasePackaging -v
+      - name: Test live verification evidence (no API calls)
+        run: python3 -m unittest discover -s tests/LiveVerification -v
+      - name: Test iOS migration checks with synthetic data
+        run: python3 -m unittest discover -s tests/IOSMigration -v
+      - name: Test iOS artifact audit with synthetic bundles
+        run: python3 -m unittest discover -s tests/IOSRelease -v
       - name: Audit repository contents
         run: python3 scripts/check-publication.py

@@ -104,8 +104,8 @@ final class AutomaticQueue {
             try state.frontier.saved(start: start, end: end)
         }
     }
-    func next(now: Date = .now) -> AutomaticJob? {
-        state.jobs.values.filter { $0.phase == .queued && ($0.retryAfter == nil || $0.retryAfter! <= now) }
+    func next(now: Date = .now, restrictedTo ids: Set<String>? = nil) -> AutomaticJob? {
+        state.jobs.values.filter { $0.phase == .queued && (ids?.contains($0.id) ?? true) && ($0.retryAfter == nil || $0.retryAfter! <= now) }
             .sorted { $0.createdAt == $1.createdAt ? $0.id < $1.id : $0.createdAt < $1.createdAt }.first
     }
     func start(id: String) throws {
@@ -128,6 +128,14 @@ final class AutomaticQueue {
                 job.phase = job.failures >= 3 ? .needsAttention : .queued
                 job.retryAfter = now.addingTimeInterval(min(1800, 30 * pow(2, Double(job.failures - 1))))
             }
+            state.jobs[id] = job
+        }
+    }
+    /// Explicit single-record retry; never resets another job or an in-flight attempt.
+    func retry(id: String) throws {
+        try transaction { state in
+            guard var job = state.jobs[id], job.phase != .processing else { throw AutomaticQueueError.missingJob }
+            job.phase = .queued; job.retryAfter = nil; job.failures = 0; job.detail = nil
             state.jobs[id] = job
         }
     }

@@ -35,3 +35,9 @@ bridge/build/
 # Python script/test caches
 __pycache__/
 *.py[cod]
+
+# Local iOS migration identity/signing; never publish personal settings.
+flutter_probe/ios/Flutter/Migration.local.xcconfig
+
+# Downloaded device containers contain private audio, text and app state.
+*.xcappdata/

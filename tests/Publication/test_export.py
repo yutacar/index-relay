@@ -72,6 +72,15 @@ class PublicationTests(unittest.TestCase):
         shutil.copy2(ROOT / 'bridge/gradle/wrapper/gradle-wrapper.jar', self.project / 'other.jar')
         self.assertNotEqual(self.audit().returncode, 0)
 
+    def test_downloaded_container_is_never_publication_content(self):
+        folder=self.project/'saved.xcappdata/AppData'
+        folder.mkdir(parents=True)
+        (folder/'private.txt').write_text('synthetic-private-data')
+        result=self.audit()
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('private/generated artifact',result.stdout)
+        self.assertNotIn('synthetic-private-data',result.stdout+result.stderr)
+
     def test_empty_candidate_set_is_not_success(self):
         spec = importlib.util.spec_from_file_location('publication', SCRIPT)
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)

@@ -1,5 +1,9 @@
 # ビルドと開発環境
 
+## ブランチとアプリの選択
+
+Flutter対応完了版は`codex/flutter`（0.12.1／34）、既存ネイティブiOS版は`main`（0.9.8／36）で管理します。以下のブリッジ生成は両方のiOSアプリで共通です。Flutter SDKとAndroid環境は[Flutterアプリの手順](../flutter_probe/README.md)、検証範囲は[対応状況](FLUTTER_STATUS.md)を参照してください。
+
 ## 対象
 
 - Apple Silicon Mac。iOS arm64実機／arm64シミュレーター。Intel Mac・x86_64シミュレーターは対象外。
@@ -25,17 +29,24 @@ python3 scripts/verify-framework.py
 
 生成先は`ios/Frameworks/IndexReceiverBridge.xcframework`。実機・シミュレーター各Debugフレームワークをまとめます。生成物内の`IndexRelay-integrity.json`は今回の両バイナリの整合性記録です。ソースからの再現性や配布元の署名を証明するものではありません。旧`bridge/framework-checksums.json`は廃止しました。既存のフレームワークには新しい記録がないため、この版で再生成してください。
 
-## 2. Xcodeで開く
+## 2. Flutter版をXcodeで開く
+
+受信ブリッジ生成後、FlutterのbinをPATHへ追加して実行します。iOSではAndroidのWhisperモデルを同梱するflavorを指定しません。
 
 ```sh
-open ios/IndexRelay.xcodeproj
+cd flutter_probe
+flutter pub get
+flutter build ios --release --no-codesign --target lib/main.dart
+open ios/Runner.xcworkspace
 ```
 
-IndexRelayスキームを選択。Signing & CapabilitiesでTeamを自分のものに設定し、例示用`dev.example.indexrelay`を一意なBundle Identifierに変更します。個人の署名設定を公開コミットへ入れないでください。既存のローカル作業プロジェクトでは署名設定を保持しています。
+Runnerスキームを選択。Signing & CapabilitiesでTeamを自分のものに設定し、例示用`dev.example.indexrelay`を一意なBundle Identifierに変更します。個人の署名設定を公開コミットへ入れないでください。既存のローカル作業プロジェクトでは署名設定を保持しています。
 
 背景タスクの識別子はBundle Identifierから組み立て、Info.plistも同じ変数を使います。Bundle Identifierを変えた場合、iOSは別アプリとして扱い、旧アプリのデータは自動移行しません。
 
-## 3. 署名なしビルド
+## 3. 既存ネイティブiOS版のビルド
+
+`ios/IndexRelay.xcodeproj`は既存SwiftUI版のビルド先です。Flutter版を更新する際は上のRunnerを使用します。既存版を開く場合は`open ios/IndexRelay.xcodeproj`、スキームはIndexRelayです。署名なしビルド例：
 
 ```sh
 xcodebuild -project ios/IndexRelay.xcodeproj -scheme IndexRelay \

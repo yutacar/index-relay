@@ -1,6 +1,6 @@
 # 開発への参加
 
-まずREADMEとdocs/ARCHITECTURE.mdを読み、docs/BUILD.mdに従って環境を用意してください。IssueやPRには再現手順、変更後の動作、テスト結果、実機で未確認の範囲を書いてください。
+Flutter版の変更は`codex/flutter`を基準に作業します。`main`は既存ネイティブiOS版です。まずREADME、docs/FLUTTER_STATUS.mdとdocs/ARCHITECTURE.mdを読み、docs/BUILD.mdに従って環境を用意してください。IssueやPRには再現手順、変更後の動作、テスト結果、実機で未確認の範囲を書いてください。
 
 ```sh
 python3 scripts/run-tests.py

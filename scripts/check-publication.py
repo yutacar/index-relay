@@ -15,7 +15,7 @@ RULES = {
     "private key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     "personal signing team": re.compile(r'DEVELOPMENT_TEAM\s*=\s*"?[A-Z0-9]{10}'),
 }
-BLOCKED = {".wav", ".pcm", ".m4a", ".mp3", ".ipa", ".p12", ".p8", ".mobileprovision", ".log"}
+BLOCKED = {".wav", ".pcm", ".m4a", ".mp3", ".ipa", ".apk", ".aab", ".jks", ".keystore", ".p12", ".p8", ".mobileprovision", ".log"}
 
 def candidate_files():
     top = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
@@ -36,7 +36,7 @@ def main():
         rel = path.relative_to(ROOT)
         if path.is_symlink():
             failures.append((rel, "symbolic link")); continue
-        if path.suffix.lower() in BLOCKED or path.name.startswith(".env") or "IndexReceiverBridge.xcframework" in path.parts:
+        if any(part.endswith(".xcappdata") for part in rel.parts) or path.suffix.lower() in BLOCKED or path.name.startswith(".env") or "IndexReceiverBridge.xcframework" in path.parts:
             failures.append((rel, "private/generated artifact")); continue
         if path.stat().st_size > 25 * 1024 * 1024:
             failures.append((rel, "large binary")); continue

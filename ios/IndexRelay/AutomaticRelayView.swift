@@ -34,7 +34,7 @@ struct AutomaticRelayView: View {
         .task { if scenePhase == .active { service.enterForeground(); DeliveryController.shared.enterForeground() } }
     }
 }
-private struct RelaySettingsView: View {
+struct RelaySettingsView: View {
     @ObservedObject var service: AutomaticRelayService
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -46,7 +46,7 @@ private struct RelaySettingsView: View {
                 NavigationLink { RelayDiagnosticsView(service: service) } label: { Label("診断・ログ", systemImage: "stethoscope") }
                 Section {
                     Picker("表示・保存件数", selection: Binding(get: { service.historyLimit }, set: service.setHistoryLimit)) {
-                        ForEach(HistoryPolicy.selectableLimits, id: \.self) { limit in Text("\(limit)件").tag(limit) }
+                        ForEach(Array(Set(HistoryPolicy.selectableLimits + [service.historyLimit])).sorted(), id: \.self) { limit in Text("\(limit)件").tag(limit) }
                     }
                     Text("初期値は30件です。件数を減らすと、超過した古い音声・文章をその場で削除します。手動削除も確認なしで実行します。")
                         .font(.footnote).foregroundStyle(.secondary)

@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "simulator_runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-5",
+  "legacyRecordings": 9,
+  "immutableFiles": 26,
+  "originalFilesUnchanged": true,
+  "historyAndTombstonesPreserved": true,
+  "frontierPreserved": true,
+  "receiptAndAttemptIDsPreserved": true,
+  "sendingRecoveredAsUnknown": true,
+  "keychainReadableAfterUpdate": true,
+  "destinationsDisabled": true,
+  "limits": "Simulator fixture compatibility only; device signing, BLE, locked/background execution remain unverified."
+}

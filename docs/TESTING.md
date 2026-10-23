@@ -62,6 +62,9 @@ python3 -m unittest discover -s tests/BridgeBuild -v
 mkdir -p work
 konanc bridge/src/iosMain/kotlin/ReceiverDiagnostics.kt tests/ReceiverDiagnostics/main.kt -o work/receiver-diagnostics-tests
 work/receiver-diagnostics-tests.kexe
+# 停止中の一部処理が失敗しても、残りの解放処理まで実行することを検査
+konanc bridge/src/iosMain/kotlin/ReceiverShutdown.kt tests/ReceiverShutdown/main.kt -o work/receiver-shutdown-tests
+work/receiver-shutdown-tests.kexe
 ```
 
 Pythonの配置・コマンド検証は18テスト。Wrapperの標準利用と、改変を実行前に拒否するケースも含みます。欠落・不正な整合性記録、両スライス、コピー／置換／復元失敗時の旧配置保持、strict指定とバージョン制限を確認します。既存の通信検査12テストとともにCIで実行します。

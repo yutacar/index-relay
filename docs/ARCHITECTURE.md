@@ -1,6 +1,6 @@
 # 実装構成
 
-この文書は0.9.2の実装を説明します。過去の試作設計ではなく、現在の永続化はJSONとファイルが中心です。Mac版・CloudKit同期・サーバーは実装していません。
+この文書の図と詳細はネイティブiOS版0.9.2を基にした共有サービスの説明です。現在のFlutter版`codex/flutter`はFlutter画面からiOSのSwiftサービス／AndroidのKotlinサービスへ接続します。プラットフォームごとの構成と確認範囲は[対応状況](FLUTTER_STATUS.md)を参照してください。過去の試作設計ではなく、現在の永続化はJSONとファイルが中心です。Mac版・CloudKit同期・サーバーは実装していません。
 
 ```mermaid
 flowchart TD

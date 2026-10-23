@@ -1,5 +1,9 @@
 # GitHub登録の準備と手順
 
+## Flutter版の取得
+
+Flutter対応完了版は`codex/flutter`で管理します。Flutter版一式を取得する場合は、このブランチをcloneしてください。下の`prepare-github.py`は既存のネイティブiOS版だけを書き出し、`flutter_probe/`を含めません。Flutter版の公開用一式を生成する手順としては使用しないでください。ブランチ名変更はリポジトリのPrivate設定、既定のmain、Releaseの公開状態を変更しません。
+
 ## 公開用コピー
 
 実機用の作業フォルダーをそのままpushせず、公開対象を限定したコピーを作ります。

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-21",
+  "scope": "step1-step2 prototype; no real BLE validation",
+  "flutter": "3.47.7",
+  "android_emulator": {
+    "api": 36,
+    "abi": "arm64-v8a",
+    "wifi_disabled": true,
+    "mobile_data_disabled": true
+  },
+  "transcription": {
+    "engine": "whisper.cpp 1.9.5 base multilingual / CPU / ja",
+    "input": "synthetic Japanese TTS fixture",
+    "samples": 114692,
+    "sample_rate": 16000,
+    "elapsed_ms": 1553,
+    "recognized_text": "これはインデックスリレーの動作確認です。6音した音声を文字に変換します。",
+    "normal_ui_elapsed_ms": [
+      23272,
+      15004
+    ],
+    "performance_note": "Integration measured 1553ms; normal debug UI measured 23272ms and 15004ms. Timing variance is unresolved; not a production performance benchmark."
+  },
+  "tests": {
+    "flutter_widgets": 2,
+    "android_integration": 2,
+    "ios_capability_integration": 1,
+    "existing_swift_checks": 506
+  },
+  "apk_sha256": "8b6d91fe5b6307c02305f23a32d03fb4d26397242a9b7861d1dbce67d03df814",
+  "apk_bytes": 233421297,
+  "unverified": [
+    "Index01 real BLE transfer/bonding",
+    "Android long-running background behavior",
+    "iOS SpeechAnalyzer recognition in new Flutter UI",
+    "production data migration"
+  ]
+}

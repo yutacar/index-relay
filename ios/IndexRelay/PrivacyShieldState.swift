@@ -21,4 +21,12 @@ struct PrivacyShieldState {
         return true
     }
     mutating func detach() { sceneID = nil; isCovered = false }
+    /// Recovery is called only from activation callbacks, never from ordinary view updates.
+    /// The app returning active must not expose another scene that remains in the background.
+    @discardableResult
+    mutating func recoverActiveScene(from sceneID: ObjectIdentifier, isSceneActive: Bool, isApplicationActive: Bool) -> Bool {
+        guard self.sceneID == sceneID, isSceneActive, isApplicationActive else { return false }
+        isCovered = false
+        return true
+    }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import UIKit
+@preconcurrency import CoreBluetooth
 @preconcurrency import BackgroundTasks
 @preconcurrency import IndexReceiverBridge
 
@@ -22,9 +23,11 @@ final class AutomaticRelayService: ObservableObject {
     private var queue: AutomaticQueue?
     private var receiver: RingReceiver?
     private var receiverID: UUID?
+    private var receiverPaused = false
     private var launched = false
     private var foreground = false
     private var runner: Task<Void, Never>?
+    private var manualRetryIDs: Set<String> = []
     private var runnerID: UUID?
     private var retry: Task<Void, Never>?
     private var receiverRetry: Task<Void, Never>?
@@ -48,6 +51,9 @@ final class AutomaticRelayService: ObservableObject {
             }
         }
     }
+    var isReady: Bool { queue != nil }
+    func job(for id: String) -> AutomaticJob? { queue?.state.jobs[id] }
+
     func launch(restoredBluetooth: Bool = false) {
         if !launched {
             launched = true
@@ -91,11 +97,15 @@ final class AutomaticRelayService: ObservableObject {
         guard queue?.state.ringID != nil else { return }
         do {
             try queue?.setEnabled(value); refresh()
-            if value { try reconcile(); startReceiver(); pumpAfterCurrentWork(); scheduleBackground() }
+            if value {
+                log("自動受信の開始を要求しました")
+                try reconcile(); startReceiver(); pumpAfterCurrentWork(); scheduleBackground()
+            }
             else {
-                stopReceiver(); store.transcriptions.cancel(); runner?.cancel(); retry?.cancel()
+                try pauseReceiver(); store.transcriptions.cancel(); runner?.cancel(); retry?.cancel()
                 BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.taskIdentifier)
                 status = "自動受信を停止しました。保存済み音声と文章は保持しています。"
+                log("自動受信を停止しました")
             }
         } catch { status = "自動処理の設定を保存できませんでした" }
     }
@@ -115,7 +125,7 @@ final class AutomaticRelayService: ObservableObject {
         foreground = false
         log("バックグラウンドへ移行しました")
         store.stopPlayback()
-        if !enabled { store.transcriptions.cancel(); return }
+        if !enabled { manualRetryIDs.removeAll(); store.transcriptions.cancel(); return }
         if enabled {
             scheduleBackground()
             if runner != nil { _ = beginRecognitionLease() }
@@ -160,6 +170,17 @@ final class AutomaticRelayService: ObservableObject {
         refresh()
         log("履歴整理: \(ids.count)件を削除（本文・音声はログに含みません）")
     }
+    func retryTranscription(id: String) throws {
+        guard foreground, let queue, !store.transcriptions.isBusy, runner == nil,
+              let recording = store.recordings.first(where: { $0.id == id }),
+              store.audioURL(recording) != nil else { throw TranscriptError.invalidRecording }
+        try queue.retry(id: id)
+        manualRetryIDs.insert(id)
+        refresh(); pump()
+    }
+    private func nextRecognitionJob() -> AutomaticJob? {
+        queue?.next(restrictedTo: enabled ? nil : manualRetryIDs)
+    }
     func retryPending() {
         guard !store.transcriptions.isBusy else { return }
         do { try queue?.retryWaiting(); refresh(); pump(); scheduleBackground() }
@@ -181,32 +202,55 @@ final class AutomaticRelayService: ObservableObject {
         else { DispatchQueue.main.sync { MainActor.assumeIsolated { work() } } }
     }
     private func startReceiver() {
-        guard enabled, receiver == nil, let ringID = queue?.state.ringID else { return }
+        guard enabled, let ringID = queue?.state.ringID else { return }
+        if let receiver {
+            guard receiverPaused else { return }
+            receiverPaused = false
+            status = "保持した受信マネージャーで再開しています"
+            do {
+                try receiver.setDurableCursor(index: Int32(queue?.state.frontier.committed ?? -1))
+                try receiver.resume()
+            } catch { status = "受信の再開に失敗しました"; restartReceiverLater() }
+            return
+        }
         receiverRetry?.cancel()
         let id = UUID(); receiverID = id
         let native = RingReceiver(ringId: ringID, onEvent: { [weak self] message in
             Self.deliver { [weak self] in
-                guard let self, self.receiverID == id else { return }
+                guard let self else { return }
+                guard self.receiverID == id else {
+                    // Keep only this fixed cleanup warning after invalidating a session.
+                    // Late progress must never change a replacement receiver's state.
+                    if message == "受信停止時の後片付けに失敗しました" { self.log(message) }
+                    return
+                }
+                guard self.enabled else { return }
                 self.handleEvent(message)
             }
         }, onRaw: { _, _ in }, onAudio: { [weak self] pcm, _, rate, index, context, contiguous in
             let rate = rate.intValue; let index = index.intValue; let contiguous = contiguous.boolValue
             // Finish durable saving before returning from the native audio callback.
             Self.deliver { [weak self] in
-                guard let self, self.receiverID == id else { return }
+                guard let self, self.enabled, self.receiverID == id else { return }
                 self.receive(pcm: pcm, rate: rate, index: index, context: context, contiguous: contiguous, ringID: ringID)
             }
         })
         receiver = native
+        status = "受信ライブラリを開始しています"
         do {
             try native.enableContinuousMode()
             try native.setDurableCursor(index: Int32(queue?.state.frontier.committed ?? -1))
             try native.start()
-            if receiverID == id { status = "リングを自動探索・再接続しています" }
         } catch { status = "自動受信の開始に失敗しました"; restartReceiverLater() }
     }
+    private func pauseReceiver() throws {
+        receiverRetry?.cancel()
+        receiverPaused = receiver != nil
+        try receiver?.pause()
+        endReceiveLease()
+    }
     private func stopReceiver() {
-        receiverRetry?.cancel(); receiverID = nil
+        receiverRetry?.cancel(); receiverID = nil; receiverPaused = false
         let current = receiver; receiver = nil
         try? current?.stop()
         endReceiveLease()
@@ -221,6 +265,20 @@ final class AutomaticRelayService: ObservableObject {
         }
     }
     private func handleEvent(_ message: String) {
+        // Fixed messages only: preserve startup progress without exposing IDs or external errors.
+        let progress: [String: String] = [
+            "Haversineマネージャーを生成します。": "受信マネージャーを準備しています",
+            "受信ライブラリを起動（更新情報なし・初回消去を拒否）": "受信ライブラリを起動しました",
+            "Bluetoothの準備を待機します。": "受信ライブラリのBluetooth準備を待っています",
+            "選択したリングを検出": "リングを検出しました。接続・録音情報を待っています",
+            "ファームウェア情報を取得": "リングの情報を取得しました。録音転送を待っています"
+        ]
+        if message == "受信ブリッジ: pause-resume-v1" || message == "同じ受信マネージャーで再開します" {
+            log(message); return
+        }
+        if let detail = progress[message] {
+            status = detail; log(message); return
+        }
         if message.hasPrefix("自動受信範囲初期化:"), let first = Int(message.split(separator: ":").last ?? "") {
             do { try queue?.observe(first: first, reset: false) }
             catch { status = "受信位置の保存に失敗しました" }
@@ -240,7 +298,8 @@ final class AutomaticRelayService: ObservableObject {
         } else if message.hasPrefix("転送失敗:") || message.hasPrefix("Bluetooth接続失敗:") {
             status = "接続・転送の再試行を待っています"; endReceiveLease()
         }
-        if message.hasPrefix("録音転送開始:") || message.contains("失敗") || message.contains("準備完了") { log(message) }
+        if message.hasPrefix("録音転送開始:") || message.contains("失敗") || message.contains("準備完了") ||
+            message.hasPrefix("受信処理エラー:") || message.hasPrefix("受信子タスクの例外:") { log(message) }
     }
     private func receive(pcm: Data, rate: Int, index: Int, context: String, contiguous: Bool, ringID: String) {
         beginReceiveLease()
@@ -325,7 +384,7 @@ final class AutomaticRelayService: ObservableObject {
         }
     }
     private func pump() {
-        guard enabled, runner == nil, !store.transcriptions.isBusy, queue?.next() != nil else { return }
+        guard runner == nil, !store.transcriptions.isBusy, nextRecognitionJob() != nil else { return }
         guard foreground || !processingTasks.isEmpty || beginRecognitionLease() else { scheduleBackground(); return }
         let id = UUID(); runnerID = id
         runner = Task { [weak self] in
@@ -334,7 +393,8 @@ final class AutomaticRelayService: ObservableObject {
                 if self.runnerID == id { self.runner = nil; self.runnerID = nil }
                 self.endRecognitionLease(); self.refresh(); self.scheduleBackground(); self.scheduleForegroundRetry()
             }
-            while self.enabled && !Task.isCancelled, let job = self.queue?.next() {
+            while !Task.isCancelled, let job = self.nextRecognitionJob() {
+                defer { self.manualRetryIDs.remove(job.id) }
                 if !self.foreground && self.processingTasks.isEmpty {
                     guard let deadline = self.recognitionDeadline, deadline.timeIntervalSinceNow > 2 else { break }
                 }
@@ -443,7 +503,17 @@ final class AutomaticRelayService: ObservableObject {
         (["Index Relay 自動処理", Date.now.ISO8601Format(), "起動: \(launchKind)",
           "アプリ版: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "不明") / \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "不明")", "自動受信: \(enabled)", "状態: \(status)",
           "未処理: \(pendingCount)・要対応: \(attentionCount)", "BG: \(backgroundStatus)",
-          "受信器: \(receiver != nil)・前面: \(foreground)", "省電力モード: \(ProcessInfo.processInfo.isLowPowerModeEnabled)",
+          "受信器: \(receiver != nil)・一時停止: \(receiverPaused)・前面: \(foreground)", "省電力モード: \(ProcessInfo.processInfo.isLowPowerModeEnabled)",
+          "リング登録: \(queue?.state.ringID != nil)・Bluetooth権限: \(bluetoothPermissionDescription)",
           "バックグラウンド更新: \(backgroundPermissionDescription)"] + events + store.transcriptions.diagnosticSummary).joined(separator: "\n")
+    }
+    private var bluetoothPermissionDescription: String {
+        switch CBCentralManager.authorization {
+        case .allowedAlways: "許可済み"
+        case .denied: "拒否（iPhoneの設定を確認）"
+        case .restricted: "端末の設定で制限中"
+        case .notDetermined: "未選択"
+        @unknown default: "不明"
+        }
     }
 }

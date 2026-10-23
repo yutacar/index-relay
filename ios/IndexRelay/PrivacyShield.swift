@@ -23,6 +23,10 @@ final class PrivacyShieldAnchorView: UIView {
         updateScene()
     }
     func updateScene() { shield.attach(to: window?.windowScene) }
+    func sceneBecameActive(_ scene: UIScene) {
+        guard let scene = scene as? UIWindowScene else { return }
+        shield.recoverActiveScene(scene)
+    }
     func detach() { shield.detach() }
 }
 
@@ -52,6 +56,20 @@ private final class ScenePrivacyShield: NSObject {
                      UIScene.didDisconnectNotification] {
             NotificationCenter.default.addObserver(self, selector: #selector(sceneChanged(_:)), name: name, object: scene)
         }
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationBecameActive(_:)),
+                                               name: UIApplication.didBecomeActiveNotification, object: nil)
+        applyVisibility()
+    }
+
+    @objc private func applicationBecameActive(_ notification: Notification) {
+        guard let scene = cover?.windowScene else { return }
+        recoverActiveScene(scene)
+    }
+
+    func recoverActiveScene(_ scene: UIWindowScene) {
+        guard state.recoverActiveScene(from: ObjectIdentifier(scene),
+                                       isSceneActive: scene.activationState == .foregroundActive,
+                                       isApplicationActive: UIApplication.shared.applicationState == .active) else { return }
         applyVisibility()
     }
 

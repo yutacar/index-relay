@@ -1,0 +1,44 @@
+{
+  "purpose": "step7 CI and distribution preparation; physical Android unverified",
+  "flutter": {
+    "version": "3.47.7",
+    "commit": "abaf9c523780a608bd46686fd5e53740a07077f8",
+    "macos_arm64_archive_sha256": "dd9da574c3168460550117eb0e8dd0313ae934fabf64a82a6d557fff5fd1422e",
+    "linux_x64_archive": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.7-stable.tar.xz",
+    "linux_x64_archive_sha256": "af7455f540df951184c7953fbe3cf884766e7541dacf8571f9f582db03dd6230",
+    "gradle_wrapper_sha256": "16caeaf66d57a0d1d2087fef6a97efa62de8da69afa5b908f40db35afc4342da"
+  },
+  "dart": "3.13.5",
+  "jdk": "17.0.16+8",
+  "android": {
+    "compileSdk": 36,
+    "emulator_api": 36,
+    "emulator_abi": "arm64-v8a",
+    "emulator_version": "37.2.12",
+    "ndk": "28.2.13676358",
+    "cmake": "3.22.1",
+    "agp": "9.1.0",
+    "gradle": "9.3.1",
+    "gradle_all_sha256": "17f277867f6914d61b1aa02efab1ba7bb439ad652ca485cd8ca6842fccec6e43",
+    "commandline_tools_revision": "23.0",
+    "commandline_tools_mac_arm64_sha1": "ad03dc49bfacfd52c110b14104ea548b8a07e830",
+    "receiver_minSdk": 31,
+    "work_runtime_ktx": "2.11.2",
+    "kermit": "2.0.6",
+    "json_test": "20240303"
+  },
+  "haversine": {
+    "coordinate": "io.github.coredevices.haversine:haversine:2541a33",
+    "android_aar_sha256": "29179063ff3137a3ee63bd973e9e40dc909ff166b614201fb9bc531789b96bdc"
+  },
+  "whisper": {
+    "tag": "v1.9.5",
+    "commit": "d1be6fde11ac6e0407606b4e42fe72d34add8037",
+    "model": "base multilingual",
+    "model_sha256": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe",
+    "model_bytes": 147951465,
+    "source_license": "MIT",
+    "model_url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.bin",
+    "source_url": "https://github.com/ggml-org/whisper.cpp.git"
+  }
+}

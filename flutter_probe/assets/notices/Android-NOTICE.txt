@@ -1,0 +1,163 @@
+Android runtime dependencies (resolved versions; includes platform variants/BOMs).
+Public POM license metadata is retained for Haversine. Included native components are covered by the publisher metadata; source reproducibility is not implied.
+androidx.activity:activity:1.8.1 - Apache-2.0
+androidx.annotation:annotation:1.9.1 - Apache-2.0
+androidx.annotation:annotation-experimental:1.4.1 - Apache-2.0
+androidx.annotation:annotation-jvm:1.9.1 - Apache-2.0
+androidx.arch.core:core-common:2.2.0 - Apache-2.0
+androidx.arch.core:core-runtime:2.2.0 - Apache-2.0
+androidx.collection:collection:1.4.2 - Apache-2.0
+androidx.collection:collection-jvm:1.4.2 - Apache-2.0
+androidx.concurrent:concurrent-futures:1.1.0 - Apache-2.0
+androidx.concurrent:concurrent-futures-ktx:1.1.0 - Apache-2.0
+androidx.core:core:1.16.0 - Apache-2.0
+androidx.core:core-ktx:1.16.0 - Apache-2.0
+androidx.core:core-viewtree:1.0.0 - Apache-2.0
+androidx.customview:customview:1.0.0 - Apache-2.0
+androidx.exifinterface:exifinterface:1.4.1 - Apache-2.0
+androidx.fragment:fragment:1.7.1 - Apache-2.0
+androidx.interpolator:interpolator:1.0.0 - Apache-2.0
+androidx.lifecycle:lifecycle-common:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-common-java8:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-livedata:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-livedata-core:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-process:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-runtime:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-service:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-viewmodel:2.7.0 - Apache-2.0
+androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0 - Apache-2.0
+androidx.loader:loader:1.0.0 - Apache-2.0
+androidx.profileinstaller:profileinstaller:1.3.1 - Apache-2.0
+androidx.room:room-common:2.7.0 - Apache-2.0
+androidx.room:room-common-jvm:2.7.0 - Apache-2.0
+androidx.room:room-runtime:2.7.0 - Apache-2.0
+androidx.room:room-runtime-android:2.7.0 - Apache-2.0
+androidx.savedstate:savedstate:1.2.1 - Apache-2.0
+androidx.sqlite:sqlite:2.5.0 - Apache-2.0
+androidx.sqlite:sqlite-android:2.5.0 - Apache-2.0
+androidx.sqlite:sqlite-framework:2.5.0 - Apache-2.0
+androidx.sqlite:sqlite-framework-android:2.5.0 - Apache-2.0
+androidx.startup:startup-runtime:1.1.1 - Apache-2.0
+androidx.tracing:tracing:1.2.0 - Apache-2.0
+androidx.tracing:tracing-ktx:1.2.0 - Apache-2.0
+androidx.versionedparcelable:versionedparcelable:1.1.1 - Apache-2.0
+androidx.viewpager:viewpager:1.0.0 - Apache-2.0
+androidx.window.extensions.core:core:1.0.0 - Apache-2.0
+androidx.window:window:1.2.0 - Apache-2.0
+androidx.window:window-java:1.2.0 - Apache-2.0
+androidx.work:work-runtime:2.11.2 - Apache-2.0
+androidx.work:work-runtime-ktx:2.11.2 - Apache-2.0
+co.touchlab:kermit:2.0.6 - Apache-2.0
+co.touchlab:kermit-android:2.0.6 - Apache-2.0
+co.touchlab:kermit-core:2.0.6 - Apache-2.0
+co.touchlab:kermit-core-android:2.0.6 - Apache-2.0
+com.getkeepsafe.relinker:relinker:1.4.5 - Apache-2.0
+com.google.guava:listenablefuture:1.0 - Apache-2.0
+com.squareup.okhttp3:okhttp:4.12.0 - Apache-2.0
+com.squareup.okhttp3:okhttp-sse:4.12.0 - Apache-2.0
+com.squareup.okio:okio:3.12.0 - Apache-2.0
+com.squareup.okio:okio-jvm:3.12.0 - Apache-2.0
+io.flutter:arm64_v8a_release:1.0.0-deb287481e3ce9468f3434937ced4240a70539ca - BSD-3-Clause
+io.flutter:armeabi_v7a_release:1.0.0-deb287481e3ce9468f3434937ced4240a70539ca - BSD-3-Clause
+io.flutter:flutter_embedding_release:1.0.0-deb287481e3ce9468f3434937ced4240a70539ca - BSD-3-Clause
+io.flutter:x86_64_release:1.0.0-deb287481e3ce9468f3434937ced4240a70539ca - BSD-3-Clause
+io.github.coredevices.haversine:haversine:2541a33 - Apache-2.0
+io.github.coredevices.haversine:haversine-android:2541a33 - Apache-2.0
+io.ktor:ktor-client-core:3.2.1 - Apache-2.0
+io.ktor:ktor-client-core-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-client-okhttp:3.2.1 - Apache-2.0
+io.ktor:ktor-client-okhttp-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-events:3.2.1 - Apache-2.0
+io.ktor:ktor-events-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-http:3.2.1 - Apache-2.0
+io.ktor:ktor-http-cio:3.2.1 - Apache-2.0
+io.ktor:ktor-http-cio-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-http-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-io:3.2.1 - Apache-2.0
+io.ktor:ktor-io-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-network:3.2.1 - Apache-2.0
+io.ktor:ktor-network-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-serialization:3.2.1 - Apache-2.0
+io.ktor:ktor-serialization-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-sse:3.2.1 - Apache-2.0
+io.ktor:ktor-sse-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-utils:3.2.1 - Apache-2.0
+io.ktor:ktor-utils-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-websocket-serialization:3.2.1 - Apache-2.0
+io.ktor:ktor-websocket-serialization-jvm:3.2.1 - Apache-2.0
+io.ktor:ktor-websockets:3.2.1 - Apache-2.0
+io.ktor:ktor-websockets-jvm:3.2.1 - Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib:2.4.0 - Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21 - Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.10.2 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.10.2 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-io-bytestring:0.7.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-io-bytestring-jvm:0.7.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-io-core:0.7.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-io-core-jvm:0.7.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-serialization-bom:1.9.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.9.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0 - Apache-2.0
+org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.9.0 - Apache-2.0
+org.jetbrains:annotations:23.0.0 - Apache-2.0
+org.jspecify:jspecify:1.0.0 - Apache-2.0
+org.slf4j:slf4j-api:2.0.17 - MIT
+
+SLF4J-2.0.17-MIT.txt
+Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
+All rights reserved.
+
+Permission is hereby granted, free  of charge, to any person obtaining
+a  copy  of this  software  and  associated  documentation files  (the
+"Software"), to  deal in  the Software without  restriction, including
+without limitation  the rights to  use, copy, modify,  merge, publish,
+distribute,  sublicense, and/or sell  copies of  the Software,  and to
+permit persons to whom the Software  is furnished to do so, subject to
+the following conditions:
+
+The  above  copyright  notice  and  this permission  notice  shall  be
+included in all copies or substantial portions of the Software.
+
+THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
+EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
+MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+Flutter-3.47.7-BSD.txt
+Copyright 2014 The Flutter Authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of Google Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Flutter/Dart package licenses and notices are additionally supplied by Flutter LicenseRegistry.

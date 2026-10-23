@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-21",
+  "version": "Flutter preview 0.2.0+2",
+  "branch": "codex/flutter-app-step3",
+  "tests": {
+    "flutter_widget_and_controller": 11,
+    "android_relay_flow": 2,
+    "android_probe_regression": 2,
+    "ios_existing_backend_capability": 1,
+    "existing_swift_checks": 506
+  },
+  "audio_oracle": {
+    "source": "existing iOS AudioSignal.adaptive / 0.9.7",
+    "samples": 640,
+    "exact_wav_match": true,
+    "input_rate": 16000
+  },
+  "process_restart": {
+    "completed_rows_retained": 1,
+    "phase": "done",
+    "visible_on_home_after_restart": true
+  },
+  "wav_export": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "bits_per_sample": 16,
+    "frames": 114692,
+    "sha256": "50efa1ac398e777e44eb0439eae32682305e4e090724d72e6631dba4b70eca72",
+    "system_picker_confirmed": true
+  },
+  "native_queue": {
+    "delete_during_inference_no_resurrection": true,
+    "retention_prunes_old_audio": true
+  },
+  "network": {
+    "emulator_wifi_enabled": false,
+    "emulator_mobile_data_enabled": false,
+    "real_posting_implemented": false
+  },
+  "unverified": [
+    "Index01 physical BLE reception",
+    "Android foreground service/long-running locked operation",
+    "iOS persistent store and background service connection",
+    "destination credentials/API verification/actual delivery"
+  ]
+}

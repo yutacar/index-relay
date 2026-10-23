@@ -1,0 +1,107 @@
+name: Flutter and Android
+on:
+  push:
+    paths:
+      - 'flutter_probe/**'
+      - 'scripts/**'
+      - 'tests/ReleasePackaging/**'
+      - 'tests/LiveVerification/**'
+      - 'ThirdPartyNotices/**'
+      - '.github/workflows/flutter-android.yml'
+  pull_request:
+    paths:
+      - 'flutter_probe/**'
+      - 'scripts/**'
+      - 'tests/ReleasePackaging/**'
+      - 'tests/LiveVerification/**'
+      - 'ThirdPartyNotices/**'
+      - '.github/workflows/flutter-android.yml'
+  workflow_dispatch:
+    inputs:
+      upload_apk:
+        description: 'Store the large unsigned review APK for one day'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: flutter-android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
+    steps:
+      # Official v7.0.1 tag checked through GitHub API, 2026-10-21.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reclaim unused tools on disposable hosted runner
+        run: |
+          mkdir -p work/flutter-ci
+          sudo --preserve-env=GITHUB_ACTIONS,RUNNER_OS,RUNNER_ENVIRONMENT,ANDROID_HOME /usr/bin/python3 scripts/ci-prune-tools.py
+      - name: Select JDK 17 and install pinned SDK packages
+        shell: bash
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_17_X64/bin" >> "$GITHUB_PATH"
+          python3 - <<'PY'
+          import os, subprocess
+          manager=os.environ['ANDROID_HOME']+'/cmdline-tools/latest/bin/sdkmanager'
+          subprocess.run([manager,'--licenses'],input='y\n'*200,text=True,stdout=subprocess.DEVNULL,check=True)
+          subprocess.run([manager,'platform-tools','emulator','platforms;android-36','build-tools;36.0.0','ndk;28.2.13676358','cmake;3.22.1','system-images;android-36;google_apis;x86_64'],check=True)
+          PY
+          test -c /dev/kvm
+          sudo chmod a+rw /dev/kvm
+      - name: Prepare verified Flutter, Whisper source/model and synthetic tone
+        run: python3 scripts/bootstrap-flutter-ci.py
+      - name: Analyze and unit tests
+        working-directory: flutter_probe
+        run: |
+          flutter pub get --enforce-lockfile
+          dart format --output=none --set-exit-if-changed lib test integration_test
+          flutter analyze
+          flutter test --flavor preview
+          flutter test --flavor production test/release_surface_test.dart
+          cd android
+          ./gradlew :app:testPreviewDebugUnitTest :app:writeDependencyInventory
+      - name: Build and audit unsigned ARM64 production APK
+        run: python3 scripts/build-android-release.py --application-id dev.example.indexrelay.releasecheck --unsigned
+      - name: Preserve unsigned review artifact before integration rebuilds
+        run: |
+          mkdir -p work/release-artifact
+          cp flutter_probe/build/app/outputs/flutter-apk/app-production-release.apk work/release-artifact/index-relay-unsigned-review.apk
+          cp work/android-release/audit.json work/release-artifact/audit.json
+      - name: x86_64 emulator Flutter and native mock-API integration
+        run: python3 scripts/run-android-ci.py
+      - name: Packaging and live verification policy tests
+        run: |
+          python3 -m unittest discover -s tests/ReleasePackaging -v
+          python3 -m unittest discover -s tests/LiveVerification -v
+      # Official v7.0.2 tag checked through GitHub API, 2026-10-21.
+      - name: Upload audits and synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: android-unsigned-review-and-evidence
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            work/release-artifact/audit.json
+            work/flutter-ci/evidence.json
+            work/flutter-ci/prune.json
+            work/flutter-ci/emulator-output.txt
+            work/android-delivery-tests/evidence.json
+            flutter_probe/build/app/reports/index-relay-dependencies.json
+      - name: Upload large unsigned review APK only when requested
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_apk
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: android-unsigned-review-apk
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+          path: work/release-artifact/index-relay-unsigned-review.apk

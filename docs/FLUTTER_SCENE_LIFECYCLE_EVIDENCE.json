@@ -1,0 +1,184 @@
+{
+  "date": "2026-10-22",
+  "status": "passed-simulator",
+  "storyboardCreationUnified": true,
+  "coldRestartVerified": true,
+  "dartResumedVerified": true,
+  "oldSessionDestructionAdopted": false,
+  "experimentalLifecycleForwardingAdopted": false,
+  "physicalDeviceAccessed": false,
+  "realServicePostsPerformed": false,
+  "checks": {
+    "flutterPreviewTests": 26,
+    "flutterProductionTests": 2,
+    "flutterAnalyze": "passed",
+    "releaseBuildPassed": true,
+    "releaseDiagnosticMarkersAbsent": true,
+    "releaseAudit": {
+      "version": "0.12.1",
+      "build": "34",
+      "bundleBytes": 34472138,
+      "whisperModelIncluded": false,
+      "internalNameMatchesDisplayName": true,
+      "deviceSigningVerified": false
+    },
+    "normalSimulatorBuildPassed": true,
+    "iosReleaseAuditUnitTests": 4
+  },
+  "limits": "iOS 27.0 simulator with synthetic data only. Native-only and fixture-derived obsolete scenes are separate scenarios. Restored legacy configuration remains unnamed; repeated adoption is retained and verified. Physical signing, BLE, locked/background recording, privacy shielding and rollback remain device checks.",
+  "backgroundCrashFixed": true,
+  "screenLockGuardAdded": true,
+  "regressionBeforeFix": {
+    "hostUnlocked": true,
+    "signal": "SIGABRT",
+    "site": "FlutterPluginSceneLifeCycleDelegate.stateRestorationActivityForScene",
+    "configurationNameWasNil": true
+  },
+  "scenarios": [
+    {
+      "name": "native-only-upgrade",
+      "simulatorRuntime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "synthetic": true,
+      "realNativeStartup": true,
+      "legacyUIFixtureUsed": false,
+      "coldStarts": [
+        {
+          "coldStart": 1,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": true,
+          "adoptionCount": 0,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "resumed",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        },
+        {
+          "coldStart": 2,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": true,
+          "adoptionCount": 0,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "resumed",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        },
+        {
+          "coldStart": 3,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": true,
+          "adoptionCount": 0,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "resumed",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        }
+      ],
+      "originalFilesUnchanged": true,
+      "disposableSimulatorRemoved": true
+    },
+    {
+      "name": "fixture-scene-through-native-upgrade",
+      "simulatorRuntime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "synthetic": true,
+      "realNativeStartup": true,
+      "legacyUIFixtureUsed": true,
+      "coldStarts": [
+        {
+          "coldStart": 1,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": false,
+          "adoptionCount": 1,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        },
+        {
+          "coldStart": 2,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": false,
+          "adoptionCount": 1,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        },
+        {
+          "coldStart": 3,
+          "configurationNamesObserved": [
+            "unnamed"
+          ],
+          "sceneWillConnectObserved": false,
+          "adoptionCount": 1,
+          "legacyRestorationSkipped": 1,
+          "nativeBackgroundCount": 1,
+          "nativeActiveCount": 2,
+          "dartLifecycleEvents": [
+            "uiReady",
+            "inactive",
+            "hidden",
+            "paused",
+            "hidden",
+            "inactive",
+            "resumed"
+          ]
+        }
+      ],
+      "originalFilesUnchanged": true,
+      "disposableSimulatorRemoved": true
+    }
+  ]
+}
