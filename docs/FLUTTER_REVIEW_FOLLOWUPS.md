@@ -16,11 +16,11 @@ Flutterの再試行は`AutomaticRelayService.retryTranscription`を呼び、`Aut
 
 ## 本物のネイティブ版からのSimulator更新
 
-元ソースの固定コミットを指定し、作業用の別ディレクトリへ展開する。今回の0.9.7のソースは`4aaf304e901d3307166117fbd266233a029076bf`。ソースには変更を加えず、Simulator用Bundle IDだけビルド設定で変更する。ビルドには検査済みのブリッジを使用する。
+元ソースの固定コミットを指定し、作業用の別ディレクトリへ展開する。今回の0.9.7のソースは`087d49a43b8785c3e8533fe4db30a412941f6180`。ソースには変更を加えず、Simulator用Bundle IDだけビルド設定で変更する。ビルドには検査済みのブリッジを使用する。
 
 ```sh
 mkdir -p work/native-legacy-review
-git archive 4aaf304e901d3307166117fbd266233a029076bf ios | tar -x -C work/native-legacy-review
+git archive 087d49a43b8785c3e8533fe4db30a412941f6180 ios | tar -x -C work/native-legacy-review
 # 検査済みios/Frameworks/IndexReceiverBridge.xcframeworkを
 # work/native-legacy-review/ios/Frameworks/へコピーする。
 xcodebuild -project work/native-legacy-review/ios/IndexRelay.xcodeproj \

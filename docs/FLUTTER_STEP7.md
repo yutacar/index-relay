@@ -91,7 +91,7 @@ AVDの試験は個人データのない専用環境で行い、プレビュー�
 
 ## 実施結果（2026-10-22 JST）
 
-コードコミット`23f20c8d54eb4b39073ed146c15f68fb4acc62b7`で[Flutter／Android CI](https://github.com/yutacar/index-relay/actions/runs/39628066032)と[既存Swift／公開ファイル検査CI](https://github.com/yutacar/index-relay/actions/runs/39628066068)が成功した。証跡は[FLUTTER_STEP7_EVIDENCE.json](FLUTTER_STEP7_EVIDENCE.json)に保存する。以後の結果資料だけのコミットは、この検証済みコードとは区別する。
+コードコミット`23f20c8d54eb4b39073ed146c15f68fb4acc62b7`でFlutter／Android CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）と既存Swift／公開ファイル検査CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）が成功した。証跡は[FLUTTER_STEP7_EVIDENCE.json](FLUTTER_STEP7_EVIDENCE.json)に保存する。以後の結果資料だけのコミットは、この検証済みコードとは区別する。
 
 | GitHub Actionsでの確認 | 結果 |
 |---|---|

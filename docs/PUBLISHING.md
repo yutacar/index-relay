@@ -1,60 +1,63 @@
-# GitHub登録の準備と手順
+# ソース公開と保守の手順
 
-## Flutter版の取得
+## リポジトリとブランチ
 
-Flutter対応完了版は`codex/flutter`で管理します。Flutter版一式を取得する場合は、このブランチをcloneしてください。下の`prepare-github.py`は既存のネイティブiOS版だけを書き出し、`flutter_probe/`を含めません。Flutter版の公開用一式を生成する手順としては使用しないでください。ブランチ名変更はリポジトリのPrivate設定、既定のmain、Releaseの公開状態を変更しません。
+公開候補は[Index Relay](https://github.com/yutacar/index-relay-public)です。移行時点ではPrivateで、コード・文書・CIを確認してから所有者が公開設定を変更します。以前の開発用リポジトリはPrivateで保管し、公開候補へのリンクとして使用しません。
 
-## 公開用コピー
+| ブランチ | 内容 | バージョン |
+| --- | --- | --- |
+| `main`（既定） | ネイティブiOS版・SwiftUI | 0.9.8／36 |
+| `codex/flutter` | Flutter版・iOS／Android | 0.12.1／34 |
 
-実機用の作業フォルダーをそのままpushせず、公開対象を限定したコピーを作ります。
+両ブランチを取得できます。ビルド中に同じ作業ディレクトリのブランチを切り替えず、必要なら別のcloneを使います。
 
 ```sh
-python3 scripts/prepare-github.py ../index-relay-public
-cd ../index-relay-public
+git clone https://github.com/yutacar/index-relay-public.git
+cd index-relay-public
+# Flutter版を選ぶ場合だけ実行
+git switch codex/flutter
+```
+
+## 移行時に持ち込まないもの
+
+旧メールを修正した3コミットを起点に、上記2ブランチだけを新しいリポジトリへ移しました。古いActions、PR、退避ブランチ、旧メールを含むローカルバックアップは移しません。旧コピーからの`git push --mirror`や退避ブランチのpushは避けてください。今後のコミットにもGitHubのnoreplyメールを使います。
+
+`work/`、署名情報、資格情報、個人の録音・文字起こし・診断ログ、生成済みXCFramework、SDK、WhisperモデルはGit管理対象外です。ビルド結果の共有にはこれらのディレクトリを丸ごと添付せず、公開用に点検した要約を使います。
+
+## 公開候補の確認
+
+[ビルド手順](BUILD.md)と[公開前の確認結果](PUBLICATION_VERIFICATION.md)を参照してください。
+
+```sh
+python3 scripts/verify-gradle-wrapper.py
 python3 scripts/check-publication.py
 python3 scripts/run-tests.py
+python3 -m unittest discover -s tests/GradleWrapper -v
+python3 -m unittest discover -s tests/BridgeNetwork -v
+python3 -m unittest discover -s tests/BridgeBuild -v
+python3 -m unittest discover -s tests/Publication -v
 ```
 
-コピーするのはSwift／Kotlinソース、Xcodeプロジェクト、アセット、テスト、スクリプト、現行ドキュメント、外部ライセンスです。個人の署名Teamを除去し、Bundle Identifierは例示用に置換します。元のプロジェクトの署名・Bundle Identifierは変えません。
+`check-publication.py`は作業ツリーも検査します。最終的な公開対象はコミット済みのファイルです。個人のTeamや一意なBundle IDをXcodeで設定した後は、設定差分を公開コミットへ入れないでください。パターン検査だけで秘密情報の完全な不在を証明するものではありません。
 
-生成済みXCFramework、work、過去のoutputs、xcuserdata、録音・診断ログはコピーしません。Gradle Wrapperと依存照合XMLは含め、書き出したWrapperを再検証します。既存のコピーを上書きしないため、再実行時は新しい出力先を指定します。削除や自動pushは行いません。
+Flutter版では`flutter_probe/README.md`に従い、Flutter分析・テスト、iOS署名なしビルド、Android署名なしproduction APKの検査も実行します。Androidの実機BLE・ロック中動作は未確認です。API投稿試験は専用の送り先で行い、CIやビルド確認で実際の資格情報を使用しません。
 
-Wrapper JARは固定パスと公式SHA-256が一致する場合だけ許可し、その他のJARは拒否します。
+## GitHubで公開するとき
 
-`check-publication.py`は秘密情報らしいパターン・個人パス・署名Team・音声・大型バイナリを検査し、値そのものは出力しません。Git管理下では未追跡・追跡済みファイルを対象にします。ステージ内容と作業ツリーが違う場合もあるため、最終的に`git diff --cached`で確認してください。検査だけで秘密情報の完全な不在を証明するものではありません。
+1. README、MIT、外部ライセンス、確認済み／未確認の範囲を確認する。
+2. 最新コミットのCI、Actionsログ・アーティファクトを確認する。公開後はActions履歴も閲覧可能になる。
+3. Settings → General → Danger Zone → Change repository visibilityからPublicへ変更する。
+4. SecurityのPrivate vulnerability reportingを有効化する。Secret scanning、Push protection、Dependabot alertsは利用可能な設定を確認する。
+5. 未ログインのブラウザーでREADME・ブランチへの導線・clone URLを確認する。
 
-## ライセンスと配布
+可視性変更の効果は[GitHub公式](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)、脆弱性報告窓口は[設定手順](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository)を参照してください。公開後にPrivateへ戻しても、第三者が取得したコピーは取り消せません。
 
-所有者の選択により独自コード・文書はMITです。著作権表記は`2026 Index Relay contributors`とし、個人の実名は追加していません。Haversineなどは元のライセンスが適用されます。再生成したバイナリを別途配布する場合はThirdPartyNoticesと配布物内の表記を同梱してください。
+## ライセンスとバイナリ配布
 
-約123MBのXCFrameworkはソースリポジトリに含めず、利用者が生成します。GitHubは通常Gitで50MiB超を警告・100MiB超を拒否するため、将来バイナリ配布を追加する場合はReleaseアセットなどを別途検討します。[GitHub公式](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github)
+独自コード・文書はMITです。Haversine、Flutter、whisper.cpp等には各ライセンスが適用されます。[ThirdPartyNotices](../ThirdPartyNotices/README.md)を参照してください。初回公開はソースのみとし、署名済みIPA・APK、モデル、XCFrameworkをReleaseへ添付しません。
 
-## ローカルGitと初回登録
+バイナリを配布するときは、署名・同梱ライセンス・モデル配布条件・実機検証を別途確認します。未署名APKのビルド成功は、Android実機の動作確認や一般配布の準備完了を意味しません。
 
-公開用コピー内で実施します。実行前に、公開先アカウント・リポジトリ名・公開／非公開を決めてください。
+## 従来の書き出しスクリプト
 
-```sh
-git init -b main
-git add .
-git diff --cached --stat
-git diff --cached --check
-# 氏名・メールの公開範囲も確認してからコミット
-git commit -m "Initial import of Index Relay"
-```
-
-GitHub上で空のリポジトリを作り、案内されたURLを使って登録します（README／LICENSEの自動生成は選ばない）。次は利用者が実行する例です。
-
-```sh
-git remote add origin https://github.com/OWNER/REPOSITORY.git
-git push -u origin main
-```
-
-この準備作業だけではGitHubリポジトリ作成・push・Release公開を行いません。新しいGitHub Actionsの結果はpush後に確認します。設定の「Private vulnerability reporting」はSECURITY.mdの案内に合わせて有効化してください。
-
-## 登録前の確認
-
-- README、MIT、第三者ライセンス、ビルド手順を確認。
-- 自動テスト、署名なしアプリビルド、公開候補チェック。
-- 意図したファイルだけがステージされ、個人Team・音声・資格情報がないことを確認。
-- 実機確認済み範囲とTelegramなど未確認範囲を明記。
-- GitHubのアカウント／名前／公開範囲を決めてから登録。
+`scripts/prepare-github.py`はネイティブiOS版だけを別フォルダーへ書き出す保守用ツールです。`flutter_probe/`を含まず、履歴・リモートも作りません。今回の2ブランチの移行やFlutter版の取得には使用せず、上記のcloneを使用してください。

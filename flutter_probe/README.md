@@ -6,6 +6,15 @@ iOSは既存のSwiftサービスとKotlin/Native受信ブリッジへ接続し�
 
 AndroidはBLE受信アダプター、通知付き受信サービス、WorkManagerによる文字起こし、資格情報保存と投稿をKotlinで実装しています。エミュレーターでは合成音声の保存・認識と、Discord／Telegramグループへの確認あり・自動送信（各2件の到着）を確認済みです。Android実機のBLE通信・ロック中動作は未確認です。構成は[step 5](../docs/FLUTTER_STEP5.md)、投稿は[step 6](../docs/FLUTTER_STEP6.md)と[実送信記録](../docs/FLUTTER_LIVE_DELIVERY.md)を参照してください。
 
+## ソースを取得する
+
+```sh
+git clone --branch codex/flutter https://github.com/yutacar/index-relay-public.git
+cd index-relay-public
+```
+
+以降、`cd flutter_probe`まではリポジトリ直下で実行します。
+
 ## 固定した環境
 
 Apple Silicon macOS、Flutter 3.47.7／Dart 3.13.5、JDK 17、Android API 36 ARM64。Android SDKにplatform-tools、emulator、platforms;android-36、build-tools;36.0.0、system-images;android-36;google_apis;arm64-v8a、ndk;28.2.13676358、cmake;3.22.1を導入します。Android Studio自体は不要です。SDKの標準ライセンス受諾が必要です。
@@ -35,7 +44,7 @@ curl -fL https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
 python3 scripts/prepare-flutter-probe.py --flutter-sdk "$FLUTTER_SDK" \
   --android-sdk "$ANDROID_HOME" --whisper-source "$WHISPER_SOURCE" --model "$WHISPER_MODEL"
 cd flutter_probe
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter analyze
 flutter test --flavor preview
 flutter build apk --flavor preview --debug --target-platform android-arm64

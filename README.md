@@ -1,5 +1,10 @@
 # Index Relay
 
+<img src="ios/IndexRelay/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" alt="Index Relay icon" width="96">
+
+[![Swift tests](https://github.com/yutacar/index-relay-public/actions/workflows/tests.yml/badge.svg?branch=codex%2Fflutter)](https://github.com/yutacar/index-relay-public/actions/workflows/tests.yml)
+[MIT](LICENSE) · [ビルド手順](docs/BUILD.md) · [確認結果](docs/PUBLICATION_VERIFICATION.md)
+
 Index01の録音を受信して文字起こしを蓄積し、Discord・Telegramへ送る個人開発のアプリです。FlutterでiOS・Androidの画面を提供し、受信・認識・投稿は各OSのネイティブ処理を使います。
 
 **Flutter 0.12.1 / build 34 · iOS 26以降 · Android · 日本語文字起こし · MIT**
@@ -7,6 +12,22 @@ Index01の録音を受信して文字起こしを蓄積し、Discord・Telegram�
 Flutter対応完了版は **`codex/flutter`** で管理します。`main`は既存のネイティブiOS版0.9.8／36です。旧ブランチ`codex/flutter-ios-migration-rehearsal`を改名しました。iOSは実機で受信・文字起こし・ロック解除後の復帰・自動受信のオフ→オン後の再開を確認済みです。Androidはエミュレーターで認識と実サービスへの基本送信を確認しており、実機BLEは未確認です。[対応状況と管理方針](docs/FLUTTER_STATUS.md)。
 
 非公式のアプリです。Pebble / Core Devicesの公式製品・公式サポートとは関係ありません。日常の受信は公式アプリを介さずIndex01と直接Bluetooth接続します。未設定個体の初期アクティベーション、ファームウェア更新・DFUの代替は提供しません。
+
+## 使う版を選ぶ
+
+| 版 | ブランチ | 確認範囲 |
+| --- | --- | --- |
+| ネイティブiOS 0.9.8／36 | [`main`](https://github.com/yutacar/index-relay-public/tree/main) | iPhoneで受信・文字起こし・投稿を確認。電池電圧の表示を追加 |
+| Flutter iOS／Android 0.12.1／34 | [`codex/flutter`](https://github.com/yutacar/index-relay-public/tree/codex/flutter) | iOSは実機で受信・復帰を確認。Androidはエミュレーターと基本投稿を確認し、実機BLEは未確認 |
+
+初回公開はソースのみです。App Store／Google Playやインストール用バイナリの配布は行っていません。ビルドには各SDKと、実機インストール時は利用者自身の署名設定が必要です。
+
+```sh
+git clone https://github.com/yutacar/index-relay-public.git
+cd index-relay-public
+# Flutter版の場合のみ選択
+git switch codex/flutter
+```
 
 ## できること
 

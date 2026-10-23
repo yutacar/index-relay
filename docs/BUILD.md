@@ -1,5 +1,14 @@
 # ビルドと開発環境
 
+## ソースを取得する
+
+```sh
+git clone https://github.com/yutacar/index-relay-public.git
+cd index-relay-public
+git switch codex/flutter
+```
+
+
 ## ブランチとアプリの選択
 
 Flutter対応完了版は`codex/flutter`（0.12.1／34）、既存ネイティブiOS版は`main`（0.9.8／36）で管理します。以下のブリッジ生成は両方のiOSアプリで共通です。Flutter SDKとAndroid環境は[Flutterアプリの手順](../flutter_probe/README.md)、検証範囲は[対応状況](FLUTTER_STATUS.md)を参照してください。
@@ -10,6 +19,8 @@ Flutter対応完了版は`codex/flutter`（0.12.1／34）、既存ネイティ�
 - アプリのDeployment Target：iOS 26.0。Xcode 27.1 / Swift 6でビルド確認。
 - Python 3.9以上。ブリッジ再生成にはJDK 17と初回のネットワーク接続が必要。Gradle 8.14.3は同梱Wrapperで取得する。
 - 実機試験：Index01、iPhone、Apple Accountによる署名。常用時のプロビジョニング管理は利用者が行う。
+
+JDK 17を先にインストールしてください。`/usr/libexec/java_home -v 17`で検出できない配置の場合は、以下の`JAVA_HOME`をJDK 17の実際のホームへ変更します。`java -version`で17系を確認してから進めます。
 
 ## 1. 受信ブリッジを生成する
 
@@ -50,7 +61,7 @@ Runnerスキームを選択。Signing & CapabilitiesでTeamを自分のものに
 
 ```sh
 xcodebuild -project ios/IndexRelay.xcodeproj -scheme IndexRelay \
-  -configuration Debug -destination 'generic/platform=iOS' \
+  -configuration Release -destination 'generic/platform=iOS' \
   -derivedDataPath work/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 

@@ -87,7 +87,7 @@ python3 scripts/test-flutter-ios-upgrade.py \
 
 合成データの専用iOS 26.5 Simulatorで、26ファイルの維持、退避の照合・改変検出、Flutter更新、5保存領域の復旧、合成Keychainの読出しに成功した。終了後の専用Simulatorと一時退避の削除も確認した。移行チェック14、送信確認・サービス準備待ち16、公開検査9テストと既存Swift 506チェックが成功。実機用候補の照合へSimulator成果物を渡すと拒否された。
 
-コード`ea9d3ca0eb082d7ea8606cf8ef379f02765f068b`で[Swift／移行チェックCI](https://github.com/yutacar/index-relay/actions/runs/39698822932)と[Flutter／Android CI](https://github.com/yutacar/index-relay/actions/runs/39698822928)が成功。Androidの前回失敗は起動完了直後の携帯通信サービス準備であり、サービスと通信無効化コマンドの準備待ちを追加した。追試ではサービス準備1.03秒、Flutter統合155.03秒、模擬送信114.61秒だった。この準備時点では実機署名・更新、実サービス投稿は未実施だった。Android版の最新の実送信結果は[実送信確認](FLUTTER_LIVE_DELIVERY.md)を参照。
+コード`ea9d3ca0eb082d7ea8606cf8ef379f02765f068b`でSwift／移行チェックCI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）とFlutter／Android CI（旧Privateリポジトリでの過去記録。公開先のCIは[Actions](https://github.com/yutacar/index-relay-public/actions)を参照）が成功。Androidの前回失敗は起動完了直後の携帯通信サービス準備であり、サービスと通信無効化コマンドの準備待ちを追加した。追試ではサービス準備1.03秒、Flutter統合155.03秒、模擬送信114.61秒だった。この準備時点では実機署名・更新、実サービス投稿は未実施だった。Android版の最新の実送信結果は[実送信確認](FLUTTER_LIVE_DELIVERY.md)を参照。
 
 最新の0.12.1／34を対象とする複数OSの検証は[シミュレーター検証](FLUTTER_IOS_SIMULATOR_MATRIX.md)を参照。上記は準備時点の記録として残し、実機での結果と混同しない。
 
