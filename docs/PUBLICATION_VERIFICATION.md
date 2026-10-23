@@ -1,6 +1,6 @@
 # 公開前の確認結果
 
-確認日：2026-10-23。公開候補は[index-relay](https://github.com/yutacar/index-relay)です。可視性変更前のPrivateリポジトリとして準備しました。最新の自動実行結果は[GitHub Actions](https://github.com/yutacar/index-relay/actions)を参照してください。以下はローカルで実行した確認の記録です。
+確認日：2026-10-23。公開候補は[index-relay](https://github.com/yutacar/index-relay)です。Privateで準備した後、2026-10-23にPublicへ変更しました。未ログインでリポジトリと両ブランチのREADMEを取得でき、旧メールを含む書き換え前の先端コミット2件は未ログインでも取得できないことを確認しました。Private vulnerability reporting、Secret scanning、Push protectionは有効です。最新の自動実行結果は[GitHub Actions](https://github.com/yutacar/index-relay/actions)を参照してください。以下はローカルで実行した確認の記録です。
 
 ## 取得元と確認環境
 
@@ -34,7 +34,7 @@ Flutterのskip 2件はpreview実行では対象外のproduction専用テスト�
 
 移行対象の修正済み3コミットと311個のGit blobを照合し、旧メール2件の一致はなかった。author／committerはGitHubのnoreplyメール。上記2ブランチだけを新しい独立リポジトリにpushし、旧Actions、PR、退避ブランチ、ローカルのバックアップは移していない。
 
-書き換え前の2ブランチの先端コミットは、移行先のGitHub APIでは`No commit found for SHA`になった。元の開発リポジトリはPrivateで保管する。この確認は、他の公開リポジトリ・第三者のコピー・GitHub全体から過去のメールが消えたことを意味しない。
+書き換え前の2ブランチの先端コミットは、移行先のGitHub APIでは`No commit found for SHA`になった。旧リポジトリの両ブランチは新リポジトリに包含され、独自のRelease・PR・未解決Issueはありませんでした。検証済みのローカルbundleへ退避し、公開用リポジトリの保守には不要と確認しました。この確認は、他の公開リポジトリ・第三者のコピー・GitHub全体から過去のメールが消えたことを意味しない。
 
 ## 実機確認との区別
 

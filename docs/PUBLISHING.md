@@ -2,7 +2,7 @@
 
 ## リポジトリとブランチ
 
-公開候補は[Index Relay](https://github.com/yutacar/index-relay)です。移行時点ではPrivateで、コード・文書・CIを確認してから所有者が公開設定を変更します。以前の開発用リポジトリは`index-relay-private-archive`へ改名してPrivateで保管し、公開候補へのリンクとして使用しません。公開候補は当初の`index-relay-public`から`index-relay`へ改名済みです。
+公開先は[Index Relay](https://github.com/yutacar/index-relay)です。2026-10-23にPublicへ変更し、未ログインで両ブランチのREADMEを取得できることを確認しました。旧メールを含む開発履歴・ローカル退避データは公開対象に含めません。
 
 | ブランチ | 内容 | バージョン |
 | --- | --- | --- |
@@ -42,7 +42,9 @@ python3 -m unittest discover -s tests/Publication -v
 
 Flutter版では`flutter_probe/README.md`に従い、Flutter分析・テスト、iOS署名なしビルド、Android署名なしproduction APKの検査も実行します。Androidの実機BLE・ロック中動作は未確認です。API投稿試験は専用の送り先で行い、CIやビルド確認で実際の資格情報を使用しません。
 
-## GitHubで公開するとき
+## GitHubの公開設定と確認
+
+公開時にPrivate vulnerability reporting、Secret scanning、Push protectionを有効化しました。以下は公開・保守時の確認手順です。
 
 1. README、MIT、外部ライセンス、確認済み／未確認の範囲を確認する。
 2. 最新コミットのCI、Actionsログ・アーティファクトを確認する。公開後はActions履歴も閲覧可能になる。
