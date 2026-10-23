@@ -1,11 +1,23 @@
 # ビルドと開発環境
 
+## ソースを取得する
+
+```sh
+git clone https://github.com/yutacar/index-relay-public.git
+cd index-relay-public
+```
+
+この手順は`main`のネイティブiOS版用です。Flutter版は[`codex/flutter`のビルド手順](https://github.com/yutacar/index-relay-public/blob/codex/flutter/docs/BUILD.md)を使ってください。
+
+
 ## 対象
 
 - Apple Silicon Mac。iOS arm64実機／arm64シミュレーター。Intel Mac・x86_64シミュレーターは対象外。
 - アプリのDeployment Target：iOS 26.0。Xcode 27.1 / Swift 6でビルド確認。
 - Python 3.9以上。ブリッジ再生成にはJDK 17と初回のネットワーク接続が必要。Gradle 8.14.3は同梱Wrapperで取得する。
 - 実機試験：Index01、iPhone、Apple Accountによる署名。常用時のプロビジョニング管理は利用者が行う。
+
+JDK 17を先にインストールしてください。`/usr/libexec/java_home -v 17`で検出できない配置の場合は、以下の`JAVA_HOME`をJDK 17の実際のホームへ変更します。`java -version`で17系を確認してから進めます。
 
 ## 1. 受信ブリッジを生成する
 
@@ -39,7 +51,7 @@ IndexRelayスキームを選択。Signing & CapabilitiesでTeamを自分のも�
 
 ```sh
 xcodebuild -project ios/IndexRelay.xcodeproj -scheme IndexRelay \
-  -configuration Debug -destination 'generic/platform=iOS' \
+  -configuration Release -destination 'generic/platform=iOS' \
   -derivedDataPath work/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
