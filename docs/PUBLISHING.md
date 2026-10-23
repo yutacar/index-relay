@@ -63,3 +63,7 @@ Flutter版では`flutter_probe/README.md`に従い、Flutter分析・テスト�
 ## 従来の書き出しスクリプト
 
 `scripts/prepare-github.py`はネイティブiOS版だけを別フォルダーへ書き出す保守用ツールです。`flutter_probe/`を含まず、履歴・リモートも作りません。今回の2ブランチの移行やFlutter版の取得には使用せず、上記のcloneを使用してください。
+
+## 旧リポジトリの整理
+
+2026-10-23、必要な両ブランチの包含とローカルbundleの検証後、`index-relay-private-archive`を削除しました。公開先の`index-relay`は引き続き利用できます。退避データはローカルのGit管理対象外に保持し、GitHubへアップロードしません。
