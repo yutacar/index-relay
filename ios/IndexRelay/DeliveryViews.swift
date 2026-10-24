@@ -128,7 +128,13 @@ struct DeliveryJobDetail: View {
                         Text("送り先がオフのため送信を一時停止しています。設定でオンにすると再開します。")
                     }
                     if let detail = job.detail { Text(detail).font(.callout) }
-                    if let date = job.retryAfter, date > .now, job.phase != .sent { Text("再試行予定：\(date.formatted())").font(.caption) }
+                    if let date = job.retryAfter, date > .now, job.phase != .sent {
+                        if job.provider == .hiNew && job.phase == .cancelled {
+                            Text("送信者の待機：\(date.formatted())まで").font(.caption)
+                        } else {
+                            Text("再試行予定：\(date.formatted())").font(.caption)
+                        }
+                    }
                     if let messageID = job.messageID { Text("メッセージID：\(messageID)").font(.caption).textSelection(.enabled) }
                 }
                 if job.provider == .hiNew {
