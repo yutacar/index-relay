@@ -7,7 +7,7 @@
 
 Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄積し、Discord・Telegram・hi.newへ送る個人開発のiOSアプリです。
 
-**0.10.0 / build 37 · iOS 26以降 · 日本語文字起こし · MIT**
+**0.10.1 / build 38 · iOS 26以降 · 日本語文字起こし · MIT**
 
 非公式のアプリです。Pebble / Core Devicesの公式製品・公式サポートとは関係ありません。日常の受信は公式アプリを介さずIndex01と直接Bluetooth接続します。未設定個体の初期アクティベーション、ファームウェア更新・DFUの代替は提供しません。
 
@@ -15,7 +15,8 @@ Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄�
 
 | 版 | ブランチ | 確認範囲 |
 | --- | --- | --- |
-| ネイティブiOS 0.10.0／37 | [`main`](https://github.com/yutacar/index-relay/tree/main) | iPhoneで受信・文字起こし・投稿を確認。電池電圧の表示を追加 |
+| ネイティブiOS 0.9.8／36 | [`main`](https://github.com/yutacar/index-relay/tree/main) | iPhoneで受信・文字起こし・投稿を確認。電池電圧の表示を追加 |
+| hi.new対応ネイティブiOS 0.10.1／38 | [`codex/hi-new-delivery`](https://github.com/yutacar/index-relay/tree/codex/hi-new-delivery) | 送信待ち分離・API互換対応をビルドとモックで確認。ロック中のhi.new実送信は追試対象 |
 | Flutter iOS／Android 0.12.1／34 | [`codex/flutter`](https://github.com/yutacar/index-relay/tree/codex/flutter) | iOSは実機で受信・復帰を確認。Androidはエミュレーターと基本投稿を確認し、実機BLEは未確認 |
 
 初回公開はソースのみです。App Store／Google Playやインストール用バイナリの配布は行っていません。ビルドには各SDKと、実機インストール時は利用者自身の署名設定が必要です。
@@ -23,7 +24,9 @@ Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄�
 ```sh
 git clone https://github.com/yutacar/index-relay.git
 cd index-relay
-# Flutter版の場合のみ選択
+# hi.new対応版の場合
+git switch codex/hi-new-delivery
+# Flutter版の場合は代わりに選択
 git switch codex/flutter
 ```
 

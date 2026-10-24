@@ -244,6 +244,10 @@ final class DeliveryController: ObservableObject {
     func approve(_ id: UUID, text: String) { change { try archive?.approve(id: id, text: text) }; clearNotification(id); openWindow(); pump() }
     func cancel(_ id: UUID) { change { try archive?.cancel(id: id) }; clearNotification(id) }
     func retry(_ id: UUID, allowUnknown: Bool = false) { change { try archive?.retry(id: id, allowUnknown: allowUnknown) }; openWindow(); pump() }
+    func deleteCompletedTest(_ id: UUID) {
+        change { try archive?.deleteCompletedTest(id: id) }
+        if !state.jobs.contains(where: { $0.id == id }) { clearNotification(id) }
+    }
     func dismissUnknown(_ id: UUID) { change { try archive?.dismissUnknown(id: id) }; clearNotification(id) }
     func markSent(_ id: UUID) { change { try archive?.markSent(id: id) }; clearNotification(id) }
     private func change(_ action: () throws -> Void) {
@@ -299,6 +303,7 @@ final class DeliveryController: ObservableObject {
                 // Cancel only ordinary transfers; uncertain attempts are never registered a second time.
                 for (id, task) in self.active where self.normalIDs.contains(id) { task.cancel() }
                 self.endWindow()
+                self.pump()
             }
         }
         immediateWindow = lease != .invalid
@@ -312,25 +317,35 @@ final class DeliveryController: ObservableObject {
         if lease != .invalid { UIApplication.shared.endBackgroundTask(lease) }
         lease = .invalid; leaseToken = nil; immediateWindow = false
     }
+    private var canPrepareHiNew: Bool {
+        UIApplication.shared.applicationState == .active || !processingWindows.isEmpty || UIApplication.shared.backgroundTimeRemaining > 8
+    }
+    private var excludedProviders: Set<DeliveryProvider> {
+        DeliveryScheduling.excludedProviders(canPrepareHiNew: canPrepareHiNew, hiNewPreparing: hiNewPreparation != nil)
+    }
     private func pump() {
         retryTask?.cancel(); retryTask = nil
-        guard ready, !recovering, active.isEmpty, hiNewPreparation == nil, let archive else { return }
-        let job = archive.next()
-        guard let job else { endWindow(); scheduleRetry(); return }
+        guard ready, !recovering, active.isEmpty, let archive else { return }
+        let excluded = excludedProviders
+        let job = archive.next(excluding: excluded)
+        guard let job else {
+            // Keep the execution lease while the read-only hi.new preflight is running.
+            if hiNewPreparation == nil { endWindow() }
+            scheduleRetry(excluding: excluded); return
+        }
         guard let destination = state.destinations.first(where: { $0.id == job.destinationID }), destination.identity == job.targetIdentity else {
             change { try archive.update(job.id) { $0.phase = .needsAttention; $0.detail = "送り先が変更されています。確認してください。" } }; return
         }
         if job.provider == .hiNew {
-            guard UIApplication.shared.applicationState == .active || !processingWindows.isEmpty || UIApplication.shared.backgroundTimeRemaining > 8 else { endWindow(); return }
             hiNewPreparation = Task { [weak self] in
                 guard let self else { return }
-                defer { self.hiNewPreparation = nil; if !Task.isCancelled { self.pump() } }
+                defer { self.hiNewPreparation = nil; self.pump() }
                 do {
                     let credential = try DestinationKeychain.load(destination.id)
                     let verified = try await HiNewAPI.validate(token: credential.secret, peer: destination.targetID, expectedSender: destination.hiNewSender)
                     try Task.checkCancellation()
-                    guard self.ready, let current = archive.state.jobs.first(where: { $0.id == job.id && [.queued, .retryWaiting].contains($0.phase) }),
-                          let target = archive.state.destinations.first(where: { $0.id == destination.id && $0.enabled && $0.identity == current.targetIdentity }), self.active.isEmpty else { return }
+                    guard self.ready, self.canPrepareHiNew, let current = archive.state.jobs.first(where: { $0.id == job.id && [.queued, .retryWaiting].contains($0.phase) }),
+                          let target = archive.state.destinations.first(where: { $0.id == destination.id && $0.enabled && $0.identity == current.targetIdentity }) else { return }
                     guard verified.identity == current.targetIdentity else { throw HiNewError.wrongPeer }
                     self.submit(current, to: target, credential: credential)
                 } catch is CancellationError { /* No POST was registered. Resume on the next execution window. */ }
@@ -343,6 +358,8 @@ final class DeliveryController: ObservableObject {
                     } catch { self.ready = false; self.status = "送信前確認の結果を保存できません。自動送信を停止しました。" }
                 }
             }
+            // Preflight suspends on GET requests. Register another provider without waiting for it.
+            pump()
         } else { submit(job, to: destination) }
     }
     private func submit(_ job: DeliveryJob, to destination: DeliveryDestination, credential suppliedCredential: DeliveryCredential? = nil) {
@@ -395,8 +412,8 @@ final class DeliveryController: ObservableObject {
             endWindow()
         }
     }
-    private func scheduleRetry() {
-        guard let date = archive?.nextEligibleDate(), date > .now else { return }
+    private func scheduleRetry(excluding providers: Set<DeliveryProvider> = []) {
+        guard let date = archive?.nextEligibleDate(excluding: providers), date > .now else { return }
         retryTask = Task { [weak self] in
             do { try await Task.sleep(for: .seconds(max(1, date.timeIntervalSinceNow))) } catch { return }
             self?.pump()

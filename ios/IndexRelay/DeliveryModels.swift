@@ -4,9 +4,14 @@ enum DeliveryProvider: String, Codable, CaseIterable, Identifiable, Sendable {
     case discord, telegram, hiNew
     var id: String { rawValue }
     var title: String { switch self { case .discord: "Discord"; case .telegram: "Telegram"; case .hiNew: "hi.new" } }
-    var limit: Int { switch self { case .discord: 2_000; case .telegram: 4_096; case .hiNew: 65_536 } }
+    var limit: Int { switch self { case .discord: 2_000; case .telegram: 4_096; case .hiNew: 64_000 } }
     func textSize(_ text: String) -> Int { self == .hiNew ? text.utf8.count : text.utf16.count }
     var sizeUnit: String { self == .hiNew ? "UTF-8バイト" : "文字" }
+}
+enum DeliveryScheduling {
+    static func excludedProviders(canPrepareHiNew: Bool, hiNewPreparing: Bool) -> Set<DeliveryProvider> {
+        canPrepareHiNew && !hiNewPreparing ? [] : [.hiNew]
+    }
 }
 struct DeliveryDestination: Codable, Identifiable, Sendable {
     var id: UUID
@@ -99,6 +104,11 @@ struct DeliveryJob: Codable, Identifiable, Sendable {
     var hiNewPossiblyAccepted: Bool? = nil
     // Job UUID is durable and unique per destination; attempt UUID changes on every try.
     var hiNewKey: String { "ir:" + id.uuidString.lowercased() }
+    // Only synthetic hi.new tests can be removed independently of recording history.
+    var canDeleteTest: Bool {
+        provider == .hiNew && recordingID.hasPrefix("hi-new-test-") && [.sent, .cancelled].contains(phase)
+            && (retryAfter.map { $0 <= .now } ?? true)
+    }
     var textIsFrozen: Bool { provider == .hiNew && firstSubmissionAt != nil }
     func canReplayHiNew(now: Date = .now) -> Bool {
         provider != .hiNew || firstSubmissionAt.map { now.timeIntervalSince($0) >= 0 && now.timeIntervalSince($0) < 86_400 } != false
@@ -113,9 +123,10 @@ struct DeliveryState: Codable, Sendable {
     var baselineEstablished = false
 }
 enum DeliveryStoreError: Error, LocalizedError {
-    case invalidText, targetChanged, duplicateDestination, invalidTransition, pendingJobs, missingDestination, unsupportedTarget, frozenText, replayExpired
+    case invalidText, targetChanged, duplicateDestination, invalidTransition, pendingJobs, missingDestination, unsupportedTarget, frozenText, replayExpired, waitingUntil(Date)
     var errorDescription: String? {
         switch self {
+        case .waitingUntil(let date): "待機中です（\(date.formatted())以降に再試行できます）。"
         case .invalidText: "本文が空か、送り先のサイズ上限を超えています。短く編集してください。"
         case .frozenText: "hi.newで送信開始済みの本文は変更できません。同じ本文・送信キーで結果を確認してください。"
         case .replayExpired: "hi.newの初回送信から24時間を過ぎたため再送を停止しました。送り先で確認し、必要なら新しいメモとして送ってください。"
@@ -221,7 +232,7 @@ final class DeliveryArchive {
             guard Self.validText(text, for: job.provider) else { throw DeliveryStoreError.invalidText }
             guard !job.textIsFrozen || text == job.text else { throw DeliveryStoreError.frozenText }
             guard job.canReplayHiNew() else { throw DeliveryStoreError.replayExpired }
-            if job.provider == .hiNew, let date = job.retryAfter, date > .now { throw DeliveryStoreError.invalidTransition }
+            if job.provider == .hiNew, let date = job.retryAfter, date > .now { throw DeliveryStoreError.waitingUntil(date) }
             job.hiNewValidationFailures = nil
             // Explicit approval starts a fresh automatic-retry budget.
             job.text = text; job.phase = .queued; job.retryAfter = nil; job.detail = nil; job.attempts = 0
@@ -239,11 +250,17 @@ final class DeliveryArchive {
             guard [.retryWaiting, .needsAttention].contains(job.phase) || (allowUnknown && job.phase == .unknown) else { throw DeliveryStoreError.invalidTransition }
             guard Self.validText(job.text, for: job.provider) else { throw DeliveryStoreError.invalidText }
             guard job.canReplayHiNew() else { throw DeliveryStoreError.replayExpired }
-            if job.provider == .hiNew, let date = job.retryAfter, date > .now { return }
+            if job.provider == .hiNew, let date = job.retryAfter, date > .now { throw DeliveryStoreError.waitingUntil(date) }
             job.hiNewValidationFailures = nil
             // A retry in the UI is explicit approval; toggling the global setting never approves jobs.
             if job.phase == .retryWaiting, let date = job.retryAfter, date > .now { return }
             job.phase = .queued; job.retryAfter = nil; job.detail = nil; job.attempts = 0
+        }
+    }
+    func deleteCompletedTest(id: UUID) throws {
+        try transaction { state in
+            guard let job = state.jobs.first(where: { $0.id == id }), job.canDeleteTest else { throw DeliveryStoreError.invalidTransition }
+            state.jobs.removeAll { $0.id == id }
         }
     }
     func dismissUnknown(id: UUID) throws {
@@ -351,11 +368,11 @@ final class DeliveryArchive {
         let own = job.phase == .retryWaiting ? (job.retryAfter ?? now) : now
         return max(now, own, cooldown)
     }
-    func next(now: Date = .now) -> DeliveryJob? {
-        state.jobs.first { eligibleDate($0, now: now).map { $0 <= now } ?? false }
+    func next(now: Date = .now, excluding providers: Set<DeliveryProvider> = []) -> DeliveryJob? {
+        state.jobs.first { !providers.contains($0.provider) && (eligibleDate($0, now: now).map { $0 <= now } ?? false) }
     }
-    func nextEligibleDate(now: Date = .now) -> Date? {
-        state.jobs.compactMap { eligibleDate($0, now: now) }.min()
+    func nextEligibleDate(now: Date = .now, excluding providers: Set<DeliveryProvider> = []) -> Date? {
+        state.jobs.filter { !providers.contains($0.provider) }.compactMap { eligibleDate($0, now: now) }.min()
     }
 }
 enum DeliveryResult: Equatable, Sendable {

@@ -66,10 +66,10 @@ check(post.value(forHTTPHeaderField: "Authorization") == "Bearer " + token, "Bea
 check(post.value(forHTTPHeaderField: "Idempotency-Key") == job.hiNewKey && post.httpBody == nil, "Stable header and separate upload file data")
 check(object["enc"] as? String == "none" && object["recipient_public_key"] is NSNull && object["body"] as? String == job.text, "Explicit plaintext and nil recipient key")
 check(rejects { _ = try HiNewAPI.post(destination: second, token: token, job: job) }, "Routing snapshot cannot redirect to another peer")
-for count in [65_536, 65_537] { check(DeliveryArchive.validText(String(repeating: "a", count: count), for: .hiNew) == (count == 65_536), "UTF8 ASCII boundary") }
-check(DeliveryArchive.validText(String(repeating: "あ", count: 21_845), for: .hiNew), "UTF8 Japanese within limit")
-check(!DeliveryArchive.validText(String(repeating: "あ", count: 21_846), for: .hiNew), "UTF8 Japanese overflow")
-check(!DeliveryArchive.validText(String(repeating: "😀", count: 16_385), for: .hiNew), "UTF8 supplementary overflow")
+for count in [64_000, 64_001] { check(DeliveryArchive.validText(String(repeating: "a", count: count), for: .hiNew) == (count == 64_000), "UTF8 ASCII boundary") }
+check(DeliveryArchive.validText(String(repeating: "あ", count: 21_333), for: .hiNew), "UTF8 Japanese within limit")
+check(!DeliveryArchive.validText(String(repeating: "あ", count: 21_334), for: .hiNew), "UTF8 Japanese overflow")
+check(!DeliveryArchive.validText(String(repeating: "😀", count: 16_001), for: .hiNew), "UTF8 supplementary overflow")
 try archive.approve(id: job.id, text: "edited")
 let attempt = UUID(); try archive.begin(id: job.id, attempt: attempt)
 let started = archive.state.jobs[0]
@@ -81,7 +81,12 @@ let attempt2 = UUID(); try archive.begin(id: job.id, attempt: attempt2)
 check(archive.state.jobs[0].hiNewKey == started.hiNewKey, "Manual unknown retry keeps original key")
 try archive.finish(id: job.id, attempt: attempt2, result: .retry(3600))
 check(archive.state.jobs[0].phase == .unknown && archive.state.jobs[0].hiNewPossiblyAccepted == true, "Later rejection cannot disprove earlier acceptance")
-try archive.retry(id: job.id, allowUnknown: true)
+do {
+    try archive.retry(id: job.id, allowUnknown: true)
+    preconditionFailure("Cooldown must explain the wait")
+} catch DeliveryStoreError.waitingUntil(let date) {
+    check(date > .now && DeliveryStoreError.waitingUntil(date).localizedDescription.contains("待機中"), "Unknown replay explains cooldown")
+}
 check(archive.state.jobs[0].phase == .unknown, "Unknown replay honors rate cooldown")
 check(archive.next() == nil, "Quota shared across same sender's recipients")
 try archive.update(job.id) { $0.retryAfter = nil; $0.phase = .needsAttention }
@@ -104,7 +109,7 @@ check(classify(201, replayReceipt) == .hiNewSent("42", HiNewAPI.parseDate(expiry
 for update: [String: Any] in [["id": true], ["id": -1], ["to": "other-bot"], ["enc": "age"], ["replayed": 1], ["expires_at": "bad"]] {
     check(classify(201, receipt.merging(update) { _, new in new }) == .unknown, "Malformed receipt remains uncertain")
 }
-check(classify(200, receipt) != .hiNewSent("42", HiNewAPI.parseDate(expiry)!, false), "Only documented 201 is success")
+check(classify(200, receipt) != .hiNewSent("42", HiNewAPI.parseDate(expiry)!, false), "200 without replay confirmation remains unknown")
 check(classify(500) == .unknown, "No blind 5xx retry")
 check(classify(nil, error: NSURLErrorTimedOut, sent: 0) == .unknown, "Zero-byte counter cannot prove timeout was unsent")
 check(classify(nil, error: NSURLErrorCannotConnectToHost, sent: 0) == .retry(30), "Definite preconnection failure retry")
@@ -179,4 +184,55 @@ check(archive.state.jobs.last?.phase == .unknown && archive.state.jobs.last?.hiN
 try archive.update(preparationID) { $0.phase = .queued; $0.retryAfter = nil }
 try archive.hiNewValidationFailed(id: preparationID, detail: "changed key", retryDelay: nil)
 check(archive.state.jobs.last?.phase == .unknown && archive.state.destinations[0].enabled == false, "Permanent preflight failure pauses target without claiming prior POST was unsent")
+
+check(classify(200, replayReceipt) == .hiNewSent("42", HiNewAPI.parseDate(expiry)!, true), "200 replay receipt resolves original send")
+for update: [String: Any] in [["id": true], ["to": "other-bot"], ["enc": "age"], ["expires_at": "bad"], ["replayed": 1]] {
+    check(classify(200, replayReceipt.merging(update) { _, new in new }) == .unknown, "200 replay still validates every receipt field")
+}
+check(HiNewAPI.isOwnerToken(token) && !HiNewAPI.isOwnerToken("hnt_" + String(repeating: "x", count: 32)), "Warn only for owner tokens")
+// Exercise the same execution policy and persistent queue selection used by pump().
+let routing = try DeliveryArchive(file: root.appendingPathComponent("routing.json"))
+let discord = DeliveryDestination(id: UUID(), name: "Discord", provider: .discord, targetID: "42", targetKind: "channel", identity: "discord:42", enabled: true)
+let telegram = DeliveryDestination(id: UUID(), name: "Telegram", provider: .telegram, targetID: "-42", targetKind: "group", identity: "telegram:-42", enabled: true)
+try routing.transaction { state in
+    state.destinations = [destination, discord, telegram]; state.baselineEstablished = true; state.requiresConfirmation = false
+}
+try routing.ingest([transcript.recordingID: transcript])
+check(routing.next()?.provider == .hiNew, "hi.new starts at the head of a multi-provider recording")
+for (hasWindow, preparing) in [(false, false), (true, true), (false, true)] {
+    let excluded = DeliveryScheduling.excludedProviders(canPrepareHiNew: hasWindow, hiNewPreparing: preparing)
+    let first = routing.next(excluding: excluded)!
+    check(first.provider == .discord, "No window or ongoing preflight does not block Discord registration")
+    let attempt = UUID(); try routing.begin(id: first.id, attempt: attempt)
+    check(routing.state.jobs.first(where: { $0.id == first.id })?.phase == .sending, "Selected Discord job can register its attempt")
+    check(routing.next(excluding: excluded)?.provider == .telegram, "Telegram also remains eligible behind hi.new")
+    try routing.update(first.id) { $0.phase = .queued }
+}
+check(routing.next(excluding: DeliveryScheduling.excludedProviders(canPrepareHiNew: true, hiNewPreparing: false))?.provider == .hiNew, "hi.new resumes on the next execution window")
+try routing.transaction { state in
+    for i in state.jobs.indices where state.jobs[i].provider != .hiNew { state.jobs[i].phase = .retryWaiting; state.jobs[i].retryAfter = .now.addingTimeInterval(60) }
+}
+check(routing.nextEligibleDate(excluding: [.hiNew])! > .now, "hi.new at head does not hide other providers' retry timer")
+let syntheticID = UUID()
+try routing.transaction { state in
+    var synthetic = job; synthetic.id = syntheticID; synthetic.recordingID = "hi-new-test-" + UUID().uuidString; synthetic.phase = .confirmation
+    state.jobs.append(synthetic)
+}
+for phase: DeliveryPhase in [.confirmation, .queued, .sending, .retryWaiting, .needsAttention, .unknown] {
+    try routing.update(syntheticID) { $0.phase = phase }
+    check(rejects { try routing.deleteCompletedTest(id: syntheticID) }, "Cannot delete a pending or uncertain test")
+}
+for phase: DeliveryPhase in [.sent, .cancelled] {
+    try routing.update(syntheticID) { $0.phase = phase }
+    check(routing.state.jobs.last!.canDeleteTest, "Completed and cancelled tests expose delete action")
+}
+try routing.update(syntheticID) { $0.retryAfter = .now.addingTimeInterval(3600) }
+check(rejects { try routing.deleteCompletedTest(id: syntheticID) }, "Deleting a cancelled test cannot bypass sender cooldown")
+try routing.update(syntheticID) { $0.retryAfter = nil }
+try routing.deleteCompletedTest(id: syntheticID)
+check(!routing.state.jobs.contains { $0.id == syntheticID }, "Delete completed synthetic job")
+check(!(try DeliveryArchive(file: root.appendingPathComponent("routing.json"))).state.jobs.contains { $0.id == syntheticID }, "Test deletion survives restart")
+try routing.update(routing.state.jobs[0].id) { $0.phase = .sent }
+check(rejects { try routing.deleteCompletedTest(id: routing.state.jobs[0].id) }, "Ordinary delivery receipts cannot be deleted as tests")
+
 print("HiNew: \(checks) checks passed")

@@ -86,6 +86,11 @@ struct DeliveryOutboxView: View {
                         Text(job.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption2).foregroundStyle(.secondary)
                     }
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if job.canDeleteTest {
+                        Button("テスト履歴を削除", role: .destructive) { controller.deleteCompletedTest(job.id) }
+                    }
+                }
             }
             if controller.state.jobs.isEmpty { Text("新しい文字起こしを待っています。過去の文章は上のボタンから追加できます。") }
             Section {
@@ -99,6 +104,7 @@ struct DeliveryOutboxView: View {
     }
 }
 struct DeliveryJobDetail: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var controller: DeliveryController
     let id: UUID
     let initialText: String
@@ -122,7 +128,7 @@ struct DeliveryJobDetail: View {
                         Text("送り先がオフのため送信を一時停止しています。設定でオンにすると再開します。")
                     }
                     if let detail = job.detail { Text(detail).font(.callout) }
-                    if let date = job.retryAfter, job.phase == .retryWaiting { Text("再試行予定：\(date.formatted())").font(.caption) }
+                    if let date = job.retryAfter { Text("再試行予定：\(date.formatted())").font(.caption) }
                     if let messageID = job.messageID { Text("メッセージID：\(messageID)").font(.caption).textSelection(.enabled) }
                 }
                 if job.provider == .hiNew {
@@ -149,6 +155,14 @@ struct DeliveryJobDetail: View {
                     }
                     if ![.sending, .sent, .unknown, .cancelled].contains(job.phase) {
                         Button("送信しない", role: .destructive) { controller.cancel(id) }
+                    }
+                }
+                if job.canDeleteTest {
+                    Section {
+                        Button("このテスト履歴を削除", role: .destructive) {
+                            controller.deleteCompletedTest(id)
+                            if !controller.state.jobs.contains(where: { $0.id == id }) { dismiss() }
+                        }
                     }
                 }
                 Section { Text(controller.status).font(.caption) }

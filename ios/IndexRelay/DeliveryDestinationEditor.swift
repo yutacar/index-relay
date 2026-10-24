@@ -21,7 +21,7 @@ struct DeliveryDestinationEditor: View {
                 Picker("サービス", selection: $provider) {
                     ForEach(DeliveryProvider.allCases) { Text($0.title).tag($0) }
                 }.disabled(existing != nil)
-                SecureField(existing == nil ? (provider == .discord ? "Webhook URL" : (provider == .hiNew ? "送信者専用トークン（hn_…／hnt_…）" : "Botトークン"))
+                SecureField(existing == nil ? (provider == .discord ? "Webhook URL" : (provider == .hiNew ? "送信者専用トークン（hnt_…推奨）" : "Botトークン"))
                                             : "変更する場合のみ入力（空欄なら現在の値）", text: $secret)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                 if provider == .hiNew {
@@ -29,6 +29,12 @@ struct DeliveryDestinationEditor: View {
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                     Text("送信者専用アカウントのトークンを入力します。受信者のトークンは入力しません。ハンドルの新規取得・メール確認はhi.newのWebサイトで行ってください。")
                         .font(.footnote).foregroundStyle(.secondary)
+                    Text("権限を限定したhnt_トークンを推奨します。通常はprofile:read・contacts:read・messages:send、招待を使う場合だけcontacts:writeも必要です。トークンはバックグラウンド転送の要求にも含まれ、OS側に保持されます。")
+                        .font(.footnote).foregroundStyle(.secondary)
+                    if HiNewAPI.isOwnerToken(secret.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                        Label("所有者トークンは全権限を持ちます。漏えい時の影響を減らすため、hnt_トークンへの変更を推奨します。", systemImage: "exclamationmark.triangle")
+                            .font(.footnote).foregroundStyle(.orange)
+                    }
                     if let sender = existing?.hiNewSender { LabeledContent("送信者", value: sender) }
                     Toggle("平文送信と双方のtranscript保持設定を確認した", isOn: $hiNewPlaintextConfirmed)
                     Text("hi.newのサーバーには平文が届きます。送信側・受信側それぞれの所有者画面でtranscript保持を無効化してください。アプリはその設定を自動変更・確認できません。相手が鍵を登録・変更した場合は送信を停止します。")

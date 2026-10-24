@@ -42,6 +42,7 @@ struct HiNewURLTransport: HiNewTransport {
     }
 }
 enum HiNewAPI {
+    static func isOwnerToken(_ value: String) -> Bool { tokenIsValid(value) && value.hasPrefix("hn_") }
     static func tokenIsValid(_ value: String) -> Bool {
         value.range(of: #"^(?:hn|hnt)_[A-Za-z0-9_-]{16,128}$"#, options: .regularExpression) != nil
     }
@@ -128,14 +129,14 @@ enum HiNewAPI {
             if let retryAfter, retryAfter.isFinite, retryAfter > 86_400 { return .hiNewBlocked("hi.newから長い待機時間が指定されたため、送り先を停止しました。時間を置いて設定を確認してください。") }
             return .retry(max(3_600, retryAfter.flatMap { $0.isFinite ? $0 : nil } ?? 3_600))
         }
-        if status >= 500 || (200..<400).contains(status) && status != 201 { return .unknown }
+        if status >= 500 || (200..<400).contains(status) && status != 201 && status != 200 { return .unknown }
         if ["recipient_key_changed", "encryption_required"].contains(error ?? "") { return .hiNewBlocked(HiNewError.changedKey.localizedDescription) }
         if status == 409 { return .hiNewBlocked("hi.newの送信キーまたは相手の状態が一致しません。新しいキーで自動再送せず、設定と送信結果を確認してください。") }
         if [401, 402, 403, 404].contains(status) { return .hiNewBlocked(HiNewError.rejected(status).localizedDescription) }
-        guard status == 201 else { return .attention("hi.newが投稿を拒否しました（HTTP \(status)）。本文サイズ・設定を確認してください。") }
+        guard status == 201 || status == 200 else { return .attention("hi.newが投稿を拒否しました（HTTP \(status)）。本文サイズ・設定を確認してください。") }
         guard let id = DeliveryAPI.numericID(object?["id"], negative: false), let expectedPeer, object?["to"] as? String == expectedPeer,
               object?["enc"] as? String == "none", let replayed = boolean(object?["replayed"]), let expiry = object?["expires_at"] as? String,
-              let expiresAt = parseDate(expiry) else { return .unknown }
+              let expiresAt = parseDate(expiry), status == 201 || replayed else { return .unknown }
         return .hiNewSent(id, expiresAt, replayed)
     }
     static func parseDate(_ value: String) -> Date? {
