@@ -5,9 +5,9 @@
 [![Swift tests](https://github.com/yutacar/index-relay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/yutacar/index-relay/actions/workflows/tests.yml)
 [MIT](LICENSE) · [ビルド手順](docs/BUILD.md) · [確認結果](docs/PUBLICATION_VERIFICATION.md)
 
-Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄積し、Discord・Telegramへ送る個人開発のiOSアプリです。
+Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄積し、Discord・Telegram・hi.newへ送る個人開発のiOSアプリです。
 
-**0.9.8 / build 36 · iOS 26以降 · 日本語文字起こし · MIT**
+**0.10.0 / build 37 · iOS 26以降 · 日本語文字起こし · MIT**
 
 非公式のアプリです。Pebble / Core Devicesの公式製品・公式サポートとは関係ありません。日常の受信は公式アプリを介さずIndex01と直接Bluetooth接続します。未設定個体の初期アクティベーション、ファームウェア更新・DFUの代替は提供しません。
 
@@ -15,7 +15,7 @@ Index01のボタンを押して話すだけで、iPhoneに文字起こしを蓄�
 
 | 版 | ブランチ | 確認範囲 |
 | --- | --- | --- |
-| ネイティブiOS 0.9.8／36 | [`main`](https://github.com/yutacar/index-relay/tree/main) | iPhoneで受信・文字起こし・投稿を確認。電池電圧の表示を追加 |
+| ネイティブiOS 0.10.0／37 | [`main`](https://github.com/yutacar/index-relay/tree/main) | iPhoneで受信・文字起こし・投稿を確認。電池電圧の表示を追加 |
 | Flutter iOS／Android 0.12.1／34 | [`codex/flutter`](https://github.com/yutacar/index-relay/tree/codex/flutter) | iOSは実機で受信・復帰を確認。Androidはエミュレーターと基本投稿を確認し、実機BLEは未確認 |
 
 初回公開はソースのみです。App Store／Google Playやインストール用バイナリの配布は行っていません。ビルドには各SDKと、実機インストール時は利用者自身の署名設定が必要です。
@@ -31,7 +31,8 @@ git switch codex/flutter
 
 - リングを一度登録すると録音を自動受信・保存し、Apple SpeechAnalyzerで日本語を文字起こし。
 - ロック中・バックグラウンドの処理に対応。中断した処理は再開時に継続。
-- Discord Webhook、Telegram Botのグループ・スーパーグループへ複数同時送信。
+- Discord Webhook、Telegram Botのグループ・スーパーグループ、hi.newへ複数同時送信。
+- hi.newは平文・送信専用。送信者トークンとgrantを確認し、本文と送信キーを固定。[設定と制約](docs/HI_NEW.md)。
 - 送信前の確認／自動送信、送り先別の接頭語、明示したDiscord IDへのメンション。
 - ホームに新しい順で日時と連携状況を表示。保存件数は初期値30件で変更可能。
 - 複数選択による削除、標準補正した音声の再生・WAV書き出し。
@@ -58,7 +59,7 @@ Xcodeで自分のTeamと一意なBundle Identifierを設定してiPhoneへRunし
 1. 競合する公式アプリのBluetoothアクセスを止め、Index RelayにBluetoothを許可する。
 2. 歯車 → 「リング・自動文字起こし」でリングを探索して選択し、自動処理をオンにする。
 3. アプリを前面に置いて日本語モデルの準備を完了し、3〜5秒の録音で確認する。
-4. 歯車 → 「送り先・送信方法」でDiscordまたはTelegramを追加する。最初は「送信前に確認する」をオンにする。
+4. 歯車 → 「送り先・送信方法」でDiscord・Telegram・hi.newを追加する。最初は「送信前に確認する」をオンにする。
 
 Telegramはグループ専用です。Botを追加してメッセージ送信を許可し、グループIDまたは公開スーパーグループの@ユーザー名を入力します。個別DM・チャンネル・開始リンク・候補取得は対象外です。トークンをソースやIssueへ貼らないでください。[詳しい操作手順](docs/USER_GUIDE.md)。
 
@@ -69,7 +70,7 @@ python3 scripts/run-tests.py
 python3 -m unittest discover -s tests/BridgeNetwork -v
 ```
 
-macOSで12種類のSwiftテストを実行します。Bluetooth・音声認識モデル・実際の投稿は使いません。GitHub Actionsでも同じテストと通信検査ツールの合成テストを実行します。[実機の確認項目](docs/TESTING.md)。
+macOSで13種類のSwiftテストを実行します。Bluetooth・音声認識モデル・実際の投稿は使いません。GitHub Actionsでも同じテストと通信検査ツールの合成テストを実行します。[実機の確認項目](docs/TESTING.md)。
 
 ## 構成とドキュメント
 

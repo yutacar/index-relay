@@ -4,7 +4,7 @@ import UIKit
 struct DeliveryHomeSection: View {
     @ObservedObject var controller: DeliveryController
     var body: some View {
-        Section("Discord・Telegramへの送信") {
+        Section("Discord・Telegram・hi.newへの送信") {
             NavigationLink("送り先・送信方法の設定") { DeliverySettingsView(controller: controller) }
             NavigationLink {
                 DeliveryOutboxView(controller: controller)
@@ -34,6 +34,11 @@ struct DeliverySettingsView: View {
                             Text(destination.name)
                             Text("\(destination.provider.title) · \(destination.isSupported ? "" : "対象外・停止 · ")\(destination.targetID)").font(.caption).foregroundStyle(.secondary)
                         }.disabled(!controller.ready || !destination.isSupported)
+                        if destination.provider == .hiNew {
+                            Button("テスト文を確認待ちに追加") { controller.enqueueHiNewTest(destination.id) }
+                                .disabled(!destination.enabled || !controller.ready)
+                                .font(.caption)
+                        }
                         NavigationLink("設定・資格情報を変更") { DeliveryDestinationEditor(controller: controller, existing: destination) }
                             .font(.caption)
                     }
@@ -52,7 +57,7 @@ struct DeliverySettingsView: View {
             }
             Section {
                 Text(controller.status).font(.callout).textSelection(.enabled)
-                Text("Webhook URL・Botトークンはこの端末のKeychainに保存します。送信するのは文章のみです。自動送信はiOSの通信制約で遅れる場合があります。")
+                Text("Webhook URL・各サービスのトークンはこの端末のKeychainに保存します。送信するのは文章のみです。自動送信はiOSの通信制約で遅れる場合があります。")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }.navigationTitle("送り先設定")
@@ -76,7 +81,7 @@ struct DeliveryOutboxView: View {
                     DeliveryJobDetail(controller: controller, id: job.id, initialText: job.text)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack { Text(job.destinationName); Spacer(); Text(job.phase.title).foregroundStyle(job.phase == .unknown ? .orange : .secondary) }
+                        HStack { Text(job.destinationName); Spacer(); Text(job.provider == .hiNew && job.phase == .sent ? "hi.new受付済み" : job.phase.title).foregroundStyle(job.phase == .unknown ? .orange : .secondary) }
                         Text(job.text).lineLimit(2).font(.caption)
                         Text(job.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption2).foregroundStyle(.secondary)
                     }
@@ -120,13 +125,20 @@ struct DeliveryJobDetail: View {
                     if let date = job.retryAfter, job.phase == .retryWaiting { Text("再試行予定：\(date.formatted())").font(.caption) }
                     if let messageID = job.messageID { Text("メッセージID：\(messageID)").font(.caption).textSelection(.enabled) }
                 }
+                if job.provider == .hiNew {
+                    Section("hi.newの受付") {
+                        Text("送信済みはhi.newへの受付です。受信側の保存・要約・通知完了は追跡しません。")
+                        if let date = job.hiNewExpiresAt { Text("未ACK本文の期限：\(date.formatted())").font(.caption) }
+                        if job.textIsFrozen { Text("送信開始後は本文と送信キーを固定します。初回送信から24時間以内だけ、同じ内容を再送できます。") }
+                    }
+                }
                 Section("送信する文章") {
-                    if [.confirmation, .needsAttention].contains(job.phase) {
+                    if [.confirmation, .needsAttention].contains(job.phase) && !job.textIsFrozen {
                         TextEditor(text: $text).frame(minHeight: 180)
-                        Text("\(text.utf16.count) / \(job.provider.limit)文字").font(.caption)
+                        Text("\(job.provider.textSize(text)) / \(job.provider.limit)\(job.provider.sizeUnit)").font(.caption)
                     } else { Text(job.text).textSelection(.enabled) }
                     if [.confirmation, .needsAttention].contains(job.phase) {
-                        Button("この内容で送信") { controller.approve(id, text: text) }
+                        Button(job.textIsFrozen ? "同じ内容で再送する" : "この内容で送信") { controller.approve(id, text: job.textIsFrozen ? job.text : text) }
                             .disabled(!DeliveryArchive.validText(text, for: job.provider))
                     }
                     if job.phase == .retryWaiting { Button("再試行を予約") { controller.retry(id) } }
@@ -147,7 +159,7 @@ struct DeliveryJobDetail: View {
         .task { text = initialText }
         .confirmationDialog("重複投稿になる可能性があります", isPresented: $unknownPrompt, titleVisibility: .visible) {
             Button("確認済み・再送する", role: .destructive) { controller.retry(id, allowUnknown: true) }
-        } message: { Text("Discord／Telegramで前回の投稿が存在しないことを確認してから再送してください。") }
+        } message: { Text(job?.provider == .hiNew ? "hi.newは初回送信から24時間以内、同じ本文・同じ送信キーで再照合します。受付済みでも受信側の処理完了は確認できません。" : "Discord／Telegramで前回の投稿が存在しないことを確認してから再送してください。") }
     }
 }
 private struct DeliveryHistoryPicker: View {

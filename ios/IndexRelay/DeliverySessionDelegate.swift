@@ -1,7 +1,7 @@
 import Foundation
 
 struct DeliveryCompletion: Sendable {
-    var tag: String; var data: Data; var status: Int?; var errorCode: Int?; var bytesSent: Int64
+    var tag: String; var data: Data; var status: Int?; var errorCode: Int?; var bytesSent: Int64; var retryAfter: TimeInterval? = nil
 }
 // URLSession calls this delegate on a serial operation queue; only immutable values cross to the main actor.
 final class DeliverySessionDelegate: NSObject, URLSessionDataDelegate, @unchecked Sendable {
@@ -21,7 +21,14 @@ final class DeliverySessionDelegate: NSObject, URLSessionDataDelegate, @unchecke
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         complete(DeliveryCompletion(tag: task.taskDescription ?? "", data: bodies.removeValue(forKey: task.taskIdentifier) ?? Data(),
                                     status: (task.response as? HTTPURLResponse)?.statusCode,
-                                    errorCode: (error as NSError?)?.code, bytesSent: task.countOfBytesSent))
+                                    errorCode: (error as NSError?)?.code, bytesSent: task.countOfBytesSent, retryAfter: Self.retryDelay((task.response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After"))))
+    }
+    static func retryDelay(_ value: String?, now: Date = .now) -> TimeInterval? {
+        guard let value else { return nil }
+        if let seconds = TimeInterval(value), seconds.isFinite, seconds >= 0 { return seconds }
+        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+        return formatter.date(from: value).map { max(0, $0.timeIntervalSince(now)) }
     }
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) { finishedEvents() }
 }

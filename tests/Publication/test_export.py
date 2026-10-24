@@ -44,6 +44,16 @@ class PublicationTests(unittest.TestCase):
         self.assertNotIn(marker, result.stdout + result.stderr)
         self.assertNotIn('synthetic-hidden-value', result.stdout + result.stderr)
 
+    def test_hi_new_capabilities_are_rejected_without_echoing(self):
+        for prefix in ['hn', 'hnt', 'hns', 'hni']:
+            with self.subTest(prefix=prefix):
+                capability = prefix + '_' + 's' * 32
+                (self.project / 'secret.txt').write_text(capability)
+                result = self.audit()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('hi.new credential or invite', result.stdout)
+                self.assertNotIn(capability, result.stdout + result.stderr)
+
     def test_own_git_index_remains_respected(self):
         subprocess.run(['git', 'init', '-q', str(self.project)], check=True)
         (self.project / '.gitignore').write_text('/work/\n')

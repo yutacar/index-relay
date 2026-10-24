@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        E10000000000000000000001 /* HiNewAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000000000000000000002; };
         D00000000000000000000002 /* PrivacyShieldState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000012; };
         D00000000000000000000001 /* PrivacyShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000011; };
         C00000000000000000000003 /* DeliveryDestinationEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000013; };
@@ -42,6 +43,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        E10000000000000000000002 /* HiNewAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiNewAPI.swift; sourceTree = "<group>"; };
         D00000000000000000000012 /* PrivacyShieldState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShieldState.swift; sourceTree = "<group>"; };
         D00000000000000000000011 /* PrivacyShield.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShield.swift; sourceTree = "<group>"; };
         C00000000000000000000013 /* DeliveryDestinationEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryDestinationEditor.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
                 A00000000000000000000092 /* ReceiverComparison.swift */,
                 A00000000000000000000122 /* DeliveryModels.swift */,
                 A00000000000000000000124 /* DeliveryNetwork.swift */,
+                E10000000000000000000002 /* HiNewAPI.swift */,
                 A00000000000000000000126 /* DeliveryController.swift */,
                 A00000000000000000000128 /* DeliveryViews.swift */,
                 A00000000000000000000132 /* HistoryArchive.swift */,
@@ -227,6 +230,7 @@
                 A00000000000000000000091 /* ReceiverComparison.swift in Sources */,
                 A00000000000000000000121 /* DeliveryModels.swift in Sources */,
                 A00000000000000000000123 /* DeliveryNetwork.swift in Sources */,
+                E10000000000000000000001 /* HiNewAPI.swift in Sources */,
                 A00000000000000000000125 /* DeliveryController.swift in Sources */,
                 A00000000000000000000127 /* DeliveryViews.swift in Sources */,
                 A00000000000000000000131 /* HistoryArchive.swift in Sources */,
@@ -280,7 +284,7 @@
 				CODE_SIGN_STYLE = Automatic;
                 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
                 "EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IndexRelay/Info.plist;
@@ -291,7 +295,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				MARKETING_VERSION = 0.9.8;
+				MARKETING_VERSION = 0.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.example.indexrelay;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -308,7 +312,7 @@
 				CODE_SIGN_STYLE = Automatic;
                 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
                 "EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IndexRelay/Info.plist;
@@ -319,7 +323,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				MARKETING_VERSION = 0.9.8;
+				MARKETING_VERSION = 0.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.example.indexrelay;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
