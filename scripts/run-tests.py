@@ -18,7 +18,8 @@ SUITES = {
     "PlaybackCoordinator": ["PlaybackCoordinator"],
     "Transcription": ["PCM16WAV", "AudioSignal", "TranscriptArchive", "TranscriptionController"],
     "AutomaticQueue": ["ReceivedRecording", "TranscriptArchive", "AutomaticQueue"],
-    "Delivery": ["TranscriptArchive", "DeliveryModels", "DeliveryNetwork"],
+    "Delivery": ["TranscriptArchive", "DeliveryModels", "DeliveryNetwork", "HiNewAPI"],
+    "HiNew": ["TranscriptArchive", "DeliveryModels", "DeliveryNetwork", "HiNewAPI", "DeliverySessionDelegate"],
     "History": ["ReceivedRecording", "TranscriptArchive", "AutomaticQueue", "DeliveryModels", "HistoryArchive"],
 }
 

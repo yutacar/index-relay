@@ -12,6 +12,7 @@ RULES = {
     "Telegram credential": re.compile(r"\b[0-9]{6,}:[A-Za-z0-9_-]{30,}\b"),
     "Discord credential": re.compile(r"https://(?:discord(?:app)?\.com)/api/(?:v[0-9]+/)?webhooks/[0-9]+/[A-Za-z0-9._-]{30,}"),
     "GitHub credential": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,})\b"),
+    "hi.new credential or invite": re.compile(r"\b(?:hn|hnt|hns|hni)_[A-Za-z0-9_-]{16,}\b"),
     "private key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     "personal signing team": re.compile(r'DEVELOPMENT_TEAM\s*=\s*"?[A-Z0-9]{10}'),
 }

@@ -63,6 +63,7 @@ struct DeliveryAPI {
             url = try discordURL(credential.secret, posting: true)
             let policy = discordMentions ?? DiscordMentionPolicy()
             object = ["content": text, "allowed_mentions": ["parse": [String](), "users": policy.users, "roles": policy.roles]]
+        case .hiNew: throw HiNewError.invalidResponse // hi.new requires a durable job and its stable replay key.
         case .telegram:
             url = try telegramURL(credential.secret, method: "sendMessage")
             object = ["chat_id": destination.targetID, "text": text, "link_preview_options": ["is_disabled": true]]
@@ -114,6 +115,7 @@ struct DeliveryAPI {
                   let guild = result["guild_id"] as? String else { throw DeliveryNetworkError.invalidResponse }
             return DeliveryDestination(id: UUID(), name: "Discord", provider: provider, targetID: channel,
                                        targetKind: "channel", identity: "discord:\(guild):\(channel)", enabled: true)
+        case .hiNew: return try await HiNewAPI.validate(token: secret, peer: chat)
         case .telegram:
             guard chat.range(of: #"^(?:-[1-9][0-9]*|@[A-Za-z0-9_]+)$"#, options: .regularExpression) != nil else { throw DeliveryNetworkError.invalidChat }
             let me = try await getJSON(telegramURL(secret, method: "getMe"))
@@ -125,7 +127,8 @@ struct DeliveryAPI {
             return try telegramGroup(from: result, botID: botID)
         }
     }
-    static func classify(provider: DeliveryProvider, status: Int?, data: Data, errorCode: Int?, bytesSent: Int64) -> DeliveryResult {
+    static func classify(provider: DeliveryProvider, status: Int?, data: Data, errorCode: Int?, bytesSent: Int64, expectedPeer: String? = nil, retryAfter: TimeInterval? = nil) -> DeliveryResult {
+        if provider == .hiNew { return HiNewAPI.classify(status: status, data: data, errorCode: errorCode, bytesSent: bytesSent, expectedPeer: expectedPeer, retryAfter: retryAfter) }
         // A zero counter alone is insufficient proof of non-delivery across retries / OS recovery.
         if let errorCode {
             let definitePreconnection = [NSURLErrorNotConnectedToInternet, NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed, NSURLErrorCannotConnectToHost]
@@ -154,6 +157,7 @@ struct DeliveryAPI {
         switch provider {
         case .discord:
             guard let id = json?["id"] as? String else { return .unknown }; return .sent(id)
+        case .hiNew: return .unknown
         case .telegram:
             if (json?["ok"] as? Bool) == false {
                 let code = (json?["error_code"] as? Int) ?? 0
