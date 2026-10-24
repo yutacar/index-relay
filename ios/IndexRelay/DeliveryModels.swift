@@ -312,7 +312,7 @@ final class DeliveryArchive {
             guard job.attempt == attempt, job.phase == .sending || job.phase == .unknown else { return }
             if !targetSupported {
                 switch result {
-                case .sent(let messageID): job.phase = .sent; job.messageID = messageID; job.detail = "旧送り先への送信完了を受信しました。今後の送信は停止しています。"
+                case .sent(let messageID): job.phase = .sent; job.messageID = messageID; job.retryAfter = nil; job.detail = "旧送り先への送信完了を受信しました。今後の送信は停止しています。"
                 case .hiNewSent(let id, let expires, let replayed): job.phase = .sent; job.messageID = id; job.hiNewExpiresAt = expires; job.hiNewReplayed = replayed
                 case .unknown: job.phase = .unknown
                 case .retry, .attention, .hiNewBlocked: job.phase = .cancelled; job.detail = "対象外の送り先への送信は取り消しました。再送しません。"
@@ -321,7 +321,7 @@ final class DeliveryArchive {
             }
             let uncertainHiNew = job.provider == .hiNew && job.hiNewPossiblyAccepted == true
             switch result {
-            case .sent(let messageID): job.phase = .sent; job.messageID = messageID; job.detail = nil
+            case .sent(let messageID): job.phase = .sent; job.messageID = messageID; job.retryAfter = nil; job.detail = nil
             case .hiNewSent(let messageID, let expiresAt, let replayed):
                 job.phase = .sent; job.messageID = messageID; job.hiNewExpiresAt = expiresAt; job.hiNewReplayed = replayed
                 job.hiNewPossiblyAccepted = false; job.retryAfter = nil
