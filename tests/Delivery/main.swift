@@ -402,4 +402,22 @@ try migrated.transaction { $0.destinations[0].enabled = true }
 let newTranscript = try record("e")
 try migrated.ingest([newTranscript.recordingID: newTranscript])
 check(migrated.state.jobs.filter { $0.recordingID == newTranscript.recordingID }.allSatisfy { $0.destinationID != privateTarget.id && $0.destinationID != channelTarget.id }, "Unsupported enabled legacy entries cannot receive newly ingested transcripts")
+// Success removes a stale retry time; another job's live provider cooldown is retained.
+for target in [discord, telegram] {
+    let queue = try DeliveryArchive(file: root.appendingPathComponent("success-cooldown-" + target.provider.rawValue + ".json"))
+    try queue.transaction { $0.destinations = [target]; $0.requiresConfirmation = false }
+    try queue.ingest([:]); try queue.ingest([first.recordingID: first, second.recordingID: second])
+    let id = queue.state.jobs[0].id, pendingID = queue.state.jobs[1].id
+    let initial = UUID(); try queue.begin(id: id, attempt: initial)
+    try queue.finish(id: id, attempt: initial, result: .retry(30))
+    check(queue.state.jobs[0].retryAfter != nil, "Retry time is retained while waiting")
+    try queue.update(id) { $0.retryAfter = .now.addingTimeInterval(-1) }
+    let attempt = UUID(); try queue.begin(id: id, attempt: attempt)
+    try queue.update(pendingID) { $0.phase = .retryWaiting; $0.retryAfter = .now.addingTimeInterval(60) }
+    try queue.finish(id: id, attempt: attempt, result: .sent("success"))
+    check(queue.state.jobs[0].phase == .sent && queue.state.jobs[0].retryAfter == nil, "Successful Discord/Telegram retry clears its schedule")
+    check(try DeliveryArchive(file: queue.file).state.jobs[0].retryAfter == nil, "Cleared schedule survives restart")
+    check(queue.next() == nil && queue.nextEligibleDate()!.timeIntervalSinceNow > 55, "Other job's provider cooldown is unchanged")
+}
+
 print("Delivery: \(checks) checks passed")

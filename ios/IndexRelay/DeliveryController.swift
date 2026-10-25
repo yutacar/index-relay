@@ -24,6 +24,7 @@ final class DeliveryController: ObservableObject {
     private var registered = false
     private var processingWindows: Set<UUID> = []
     private var retryTask: Task<Void, Never>?
+    private var hiNewPreparation: Task<Void, Never>?
     private var lease: UIBackgroundTaskIdentifier = .invalid
     private var leaseToken: UUID?
     private var immediateWindow = false
@@ -96,6 +97,7 @@ final class DeliveryController: ObservableObject {
                     let parts = (task.taskDescription ?? "").split(separator: "|").map(String.init)
                     guard parts.count == 2, let id = UUID(uuidString: parts[0]), let attempt = UUID(uuidString: parts[1]),
                           let job = archive.state.jobs.first(where: { $0.id == id }), job.phase == .sending, job.attempt == attempt else { task.cancel(); continue }
+                    if job.provider == .hiNew && !job.canReplayHiNew() { task.cancel(); continue }
                     attempts.insert(attempt); self.active[id] = task
                     if task.state == .suspended { task.resume() }
                 }
@@ -179,9 +181,10 @@ final class DeliveryController: ObservableObject {
     func setDestinationEnabled(_ id: UUID, enabled: Bool) {
         change { try archive?.transaction { state in if let index = state.destinations.firstIndex(where: { $0.id == id }) { guard !enabled || state.destinations[index].isSupported else { throw DeliveryStoreError.unsupportedTarget }; state.destinations[index].enabled = enabled } } }
     }
-    func saveDestination(existingID: UUID?, name: String, provider: DeliveryProvider, secret: String, chat: String, prefix: String) async -> Bool {
+    func saveDestination(existingID: UUID?, name: String, provider: DeliveryProvider, secret: String, chat: String, prefix: String, hiNewPlaintextConfirmed: Bool = false) async -> Bool {
         guard ready, let archive else { return false }
         do {
+            if provider == .hiNew && !hiNewPlaintextConfirmed { throw HiNewError.plaintextConsent }
             let secretValue = try DeliveryCredential.resolve(secret, existingID: existingID, load: DestinationKeychain.load)
             var destination = try await DeliveryAPI.validate(provider: provider, secret: secretValue, chat: chat.trimmingCharacters(in: .whitespacesAndNewlines))
             if let existingID {
@@ -196,11 +199,38 @@ final class DeliveryController: ObservableObject {
             try archive.upsertDestination(destination)
             refresh(); status = "送り先を確認して保存しました（テスト投稿はしていません）"; pump(); return true
         } catch {
-            if error is DeliveryCredentialError { status = "Webhook URLまたはBotトークンを入力してください。" }
+            if error is DeliveryCredentialError { status = "Webhook URLまたは送信者トークンを入力してください。" }
+            else if let known = error as? HiNewError { status = known.localizedDescription }
             else if let known = error as? DeliveryNetworkError { status = known.localizedDescription }
             else if let known = error as? DeliveryStoreError { status = known.localizedDescription }
             else { status = "送り先を安全に保存できませんでした（コード \((error as NSError).code)）。" }
             return false
+        }
+    }
+    func redeemHiNewInvite(existingID: UUID?, secret: String, peer: String, invite: String, plaintextConfirmed: Bool) async -> Bool {
+        guard ready, let archive else { return false }
+        do {
+            guard plaintextConfirmed else { throw HiNewError.plaintextConsent }
+            let old = existingID.flatMap { id in archive.state.destinations.first { $0.id == id && $0.provider == .hiNew } }
+            if existingID != nil && old == nil { throw HiNewError.wrongPeer }
+            let token = try DeliveryCredential.resolve(secret, existingID: existingID, load: DestinationKeychain.load)
+            let result = try await HiNewAPI.redeem(token: token, peer: peer.trimmingCharacters(in: .whitespacesAndNewlines), invite: invite, expectedSender: old?.hiNewSender)
+            guard old == nil || result.identity == old?.identity else { throw HiNewError.wrongPeer }
+            status = "相手との接続を確認しました。送り先を確認して保存してください（投稿はしていません）。"
+            return true
+        } catch let error as HiNewError { status = error.localizedDescription }
+        catch { status = "接続を確認できません。招待を繰り返し使用せず、送り先の確認で再照合してください。" }
+        return false
+    }
+    func enqueueHiNewTest(_ id: UUID) {
+        change {
+            guard let archive, let destination = archive.state.destinations.first(where: { $0.id == id && $0.provider == .hiNew && $0.enabled && $0.isSupported }) else { throw DeliveryStoreError.missingDestination }
+            try archive.transaction { state in
+                state.jobs.append(DeliveryJob(recordingID: "hi-new-test-" + UUID().uuidString, destinationID: destination.id,
+                    destinationName: destination.name, provider: .hiNew, targetIdentity: destination.identity,
+                    text: destination.messageText("Index Relayの接続テストです。"), createdAt: .now, confirmationRequired: true, phase: .confirmation))
+            }
+            status = "テスト文を確認待ちに追加しました。送信一覧で内容を確認して送ってください。"
         }
     }
     func removeDestination(_ id: UUID) {
@@ -214,6 +244,10 @@ final class DeliveryController: ObservableObject {
     func approve(_ id: UUID, text: String) { change { try archive?.approve(id: id, text: text) }; clearNotification(id); openWindow(); pump() }
     func cancel(_ id: UUID) { change { try archive?.cancel(id: id) }; clearNotification(id) }
     func retry(_ id: UUID, allowUnknown: Bool = false) { change { try archive?.retry(id: id, allowUnknown: allowUnknown) }; openWindow(); pump() }
+    func deleteCompletedTest(_ id: UUID) {
+        change { try archive?.deleteCompletedTest(id: id) }
+        if !state.jobs.contains(where: { $0.id == id }) { clearNotification(id) }
+    }
     func dismissUnknown(_ id: UUID) { change { try archive?.dismissUnknown(id: id) }; clearNotification(id) }
     func markSent(_ id: UUID) { change { try archive?.markSent(id: id) }; clearNotification(id) }
     private func change(_ action: () throws -> Void) {
@@ -265,9 +299,11 @@ final class DeliveryController: ObservableObject {
             Task { @MainActor in
                 guard let self, self.leaseToken == token else { return }
                 self.immediateWindow = false
+                self.hiNewPreparation?.cancel()
                 // Cancel only ordinary transfers; uncertain attempts are never registered a second time.
                 for (id, task) in self.active where self.normalIDs.contains(id) { task.cancel() }
                 self.endWindow()
+                self.pump()
             }
         }
         immediateWindow = lease != .invalid
@@ -281,18 +317,59 @@ final class DeliveryController: ObservableObject {
         if lease != .invalid { UIApplication.shared.endBackgroundTask(lease) }
         lease = .invalid; leaseToken = nil; immediateWindow = false
     }
+    private var canPrepareHiNew: Bool {
+        UIApplication.shared.applicationState == .active || !processingWindows.isEmpty || UIApplication.shared.backgroundTimeRemaining > 8
+    }
+    private var excludedProviders: Set<DeliveryProvider> {
+        DeliveryScheduling.excludedProviders(canPrepareHiNew: canPrepareHiNew, hiNewPreparing: hiNewPreparation != nil)
+    }
     private func pump() {
         retryTask?.cancel(); retryTask = nil
         guard ready, !recovering, active.isEmpty, let archive else { return }
-        let job = archive.next()
-        guard let job else { endWindow(); scheduleRetry(); return }
+        let excluded = excludedProviders
+        let job = archive.next(excluding: excluded)
+        guard let job else {
+            // Keep the execution lease while the read-only hi.new preflight is running.
+            if hiNewPreparation == nil { endWindow() }
+            scheduleRetry(excluding: excluded); return
+        }
         guard let destination = state.destinations.first(where: { $0.id == job.destinationID }), destination.identity == job.targetIdentity else {
             change { try archive.update(job.id) { $0.phase = .needsAttention; $0.detail = "送り先が変更されています。確認してください。" } }; return
         }
+        if job.provider == .hiNew {
+            hiNewPreparation = Task { [weak self] in
+                guard let self else { return }
+                defer { self.hiNewPreparation = nil; self.pump() }
+                do {
+                    let credential = try DestinationKeychain.load(destination.id)
+                    let verified = try await HiNewAPI.validate(token: credential.secret, peer: destination.targetID, expectedSender: destination.hiNewSender)
+                    try Task.checkCancellation()
+                    guard self.ready, self.canPrepareHiNew, let current = archive.state.jobs.first(where: { $0.id == job.id && [.queued, .retryWaiting].contains($0.phase) }),
+                          let target = archive.state.destinations.first(where: { $0.id == destination.id && $0.enabled && $0.identity == current.targetIdentity }) else { return }
+                    guard verified.identity == current.targetIdentity else { throw HiNewError.wrongPeer }
+                    self.submit(current, to: target, credential: credential)
+                } catch is CancellationError { /* No POST was registered. Resume on the next execution window. */ }
+                catch {
+                    guard !Task.isCancelled, archive.state.jobs.contains(where: { $0.id == job.id && [.queued, .retryWaiting].contains($0.phase) }) else { return }
+                    do {
+                        let known = error as? HiNewError
+                        try archive.hiNewValidationFailed(id: job.id, detail: known?.localizedDescription ?? "hi.newの資格情報・送信設定を確認してください。", retryDelay: known?.retryDelay)
+                        self.refresh(); if let updated = archive.state.jobs.first(where: { $0.id == job.id }) { self.notify(updated) }
+                    } catch { self.ready = false; self.status = "送信前確認の結果を保存できません。自動送信を停止しました。" }
+                }
+            }
+            // Preflight suspends on GET requests. Register another provider without waiting for it.
+            pump()
+        } else { submit(job, to: destination) }
+    }
+    private func submit(_ job: DeliveryJob, to destination: DeliveryDestination, credential suppliedCredential: DeliveryCredential? = nil) {
+        guard let archive else { return }
         let attempt = UUID()
         do {
-            let credential = try DestinationKeychain.load(destination.id)
-            let (request, body) = try DeliveryAPI.request(destination: destination, credential: credential, text: job.text, discordMentions: job.discordMentions)
+            let credential = try suppliedCredential ?? DestinationKeychain.load(destination.id)
+            let (request, body) = try job.provider == .hiNew
+                ? HiNewAPI.post(destination: destination, token: credential.secret, job: job)
+                : DeliveryAPI.request(destination: destination, credential: credential, text: job.text, discordMentions: job.discordMentions)
             let file = root.appendingPathComponent("Delivery/\(attempt.uuidString).json")
             try TranscriptArchive.writeProtected(body, to: file)
             let useNormal = UIApplication.shared.applicationState == .active || !processingWindows.isEmpty || (immediateWindow && UIApplication.shared.backgroundTimeRemaining > 8)
@@ -305,7 +382,10 @@ final class DeliveryController: ObservableObject {
             active[job.id] = task; refresh(); task.resume()
         } catch {
             do {
-                try archive.update(job.id) { $0.phase = .needsAttention; $0.detail = "送信準備に失敗しました。資格情報・空き容量・文字数を確認してください。" }
+                try archive.update(job.id) {
+                    $0.phase = $0.provider == .hiNew && $0.hiNewPossiblyAccepted == true ? .unknown : .needsAttention
+                    $0.detail = (error as? DeliveryStoreError)?.localizedDescription ?? "送信準備に失敗しました。資格情報・空き容量・本文サイズを確認してください。"
+                }
                 refresh(); if let job = state.jobs.first(where: { $0.id == job.id }) { notify(job) }
             } catch { ready = false; status = "送信状態を保存できないため、自動送信を停止しました。" }
             pump()
@@ -321,7 +401,7 @@ final class DeliveryController: ObservableObject {
             pump(); return
         }
         do {
-            let outcome = DeliveryAPI.classify(provider: job.provider, status: result.status, data: result.data, errorCode: result.errorCode, bytesSent: result.bytesSent)
+            let outcome = DeliveryAPI.classify(provider: job.provider, status: result.status, data: result.data, errorCode: result.errorCode, bytesSent: result.bytesSent, expectedPeer: job.provider == .hiNew ? state.destinations.first(where: { $0.id == job.destinationID && $0.identity == job.targetIdentity })?.targetID : nil, retryAfter: result.retryAfter)
             try archive.finish(id: id, attempt: attempt, result: outcome)
             try? FileManager.default.removeItem(at: root.appendingPathComponent("Delivery/\(attempt.uuidString).json"))
             refresh()
@@ -332,8 +412,8 @@ final class DeliveryController: ObservableObject {
             endWindow()
         }
     }
-    private func scheduleRetry() {
-        guard let date = archive?.nextEligibleDate(), date > .now else { return }
+    private func scheduleRetry(excluding providers: Set<DeliveryProvider> = []) {
+        guard let date = archive?.nextEligibleDate(excluding: providers), date > .now else { return }
         retryTask = Task { [weak self] in
             do { try await Task.sleep(for: .seconds(max(1, date.timeIntervalSinceNow))) } catch { return }
             self?.pump()
@@ -343,13 +423,14 @@ final class DeliveryController: ObservableObject {
     func resumeBackgroundWork() { ingest(immediate: true); pump() }
     var hasPendingDelivery: Bool { state.jobs.contains { [.queued, .retryWaiting, .sending].contains($0.phase) } }
     func waitForImmediateWork() async {
-        while !Task.isCancelled && !normalIDs.isEmpty {
+        while !Task.isCancelled && (!normalIDs.isEmpty || hiNewPreparation != nil) {
             try? await Task.sleep(for: .milliseconds(200))
         }
     }
     func expireImmediateWork() {
         if UIApplication.shared.applicationState == .active { endWindow(); return }
         immediateWindow = false
+        hiNewPreparation?.cancel()
         for (id, task) in active where normalIDs.contains(id) { task.cancel() }
         endWindow()
     }

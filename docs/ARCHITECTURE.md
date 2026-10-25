@@ -72,3 +72,7 @@ Discordでは`wait=true`でメッセージIDを取得。メンションは`allow
 ## Telegramの対応範囲（0.9.6）
 
 `getMe`／`getChat`／`sendMessage`だけを使用し、group・supergroupに限定する。開始リンク・候補取得とそのセッション管理を削除。永続モデルの形式は維持し、旧DM・チャンネルの送信を起動時に停止する。未送信を取消、開始済みをunknownとして扱い、OSの復旧タスクは取消対象になる。別グループへの自動振り替えをせず、履歴と実際の成功応答を保持する。
+
+## hi.new（0.10.0）
+
+HiNewAPIは固定したHTTPS API、送信者プロフィール・grantの確認、招待redeemと応答喪失時の再照合を担当します。DeliveryControllerは送信前確認を待ち、状態・送り先・削除状態を再照合してから既存のURLSessionへ登録します。DeliveryJob.id由来の送信キーとfirstSubmissionAtを使い、本文・相手を固定して24時間だけ明示的な再照合を許可します。鍵・権限の異常は送り先の停止とジョブ状態を同時に保存します。受信・返信・Muse監視は実装しません。[詳細](HI_NEW.md)。
